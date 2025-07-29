@@ -5,32 +5,44 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import react from 'eslint-plugin-react';
+import path from 'path';
 
-/** @type {import('eslint').Linter.Config[]} */
 export default [
-  { files: ['**/*.{js,mjs,cjs,ts}'] },
+  pluginJs.configs.recommended,
+  ...tseslint.configs.recommended,
+  eslintPluginPrettierRecommended,
+
   {
-    languageOptions: { ecmaVersion: 2020, globals: globals.browser },
-  },
-  {
-    // Note: there should be no other properties in this object
     ignores: [
       'coverage',
       '**/public',
       '**/dist',
       'pnpm-lock.yaml',
       'pnpm-workspace.yaml',
+      '**/node_modules',
     ],
   },
+
   {
-    files: ['apps/web-app/**/*.{ts,tsx}'],
-    settings: { react: { version: '18.3' } },
+    files: ['**/*.{js,mjs,cjs,ts,tsx}'],
     languageOptions: {
-      // other options...
+      ecmaVersion: 2020,
+      globals: globals.browser,
+    },
+  },
+
+  // TypeScript-specific config
+  {
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
       parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: './apps/web-app',
+        // Match all tsconfigs in your monorepo
+        project: ['./apps/*/tsconfig*.json', './packages/*/tsconfig*.json'],
+        tsconfigRootDir: path.resolve(),
       },
+    },
+    settings: {
+      react: { version: 'detect' },
     },
     plugins: {
       react,
@@ -41,13 +53,12 @@ export default [
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
+      'react/react-in-jsx-scope': 'off',
       'react-refresh/only-export-components': [
         'warn',
         { allowConstantExport: true },
       ],
+      '@typescript-eslint/no-unused-vars': 'warn',
     },
   },
-  pluginJs.configs.recommended,
-  ...tseslint.configs.recommended,
-  eslintPluginPrettierRecommended,
 ];
