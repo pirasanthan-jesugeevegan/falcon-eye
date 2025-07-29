@@ -31,12 +31,10 @@ export default [
     },
   },
 
-  // TypeScript-specific config
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       parserOptions: {
-        // Match all tsconfigs in your monorepo
         project: ['./apps/*/tsconfig*.json', './packages/*/tsconfig*.json'],
         tsconfigRootDir: path.resolve(),
       },
@@ -59,6 +57,28 @@ export default [
         { allowConstantExport: true },
       ],
       '@typescript-eslint/no-unused-vars': 'warn',
+    },
+  },
+
+  // 👇 Backend override
+  {
+    files: ['apps/backend/**/*.ts'],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: {
+        project: ['./apps/backend/tsconfig.json'],
+        tsconfigRootDir: path.resolve(),
+        sourceType: 'module',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+    },
+    rules: {
+      ...tseslint.configs.recommended[1].rules,
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
     },
   },
 ];

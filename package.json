@@ -9,7 +9,9 @@
     "format": "prettier --write .",
     "prepare": "husky",
     "common": "pnpm --filter common",
-    "frontend": "pnpm --filter frontend"
+    "frontend": "pnpm --filter frontend",
+    "backend:start": "cd apps/backend && pnpm run start",
+    "backend:dev": "cd apps/backend && pnpm run start:dev"
   },
   "keywords": [],
   "author": "",
