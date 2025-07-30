@@ -8,54 +8,112 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
+import { createFileRoute } from '@tanstack/react-router'
+
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const SettingsLazyRouteImport = createFileRoute('/settings')()
+const SonarCloudSonarCloudIdLazyRouteImport = createFileRoute(
+  '/sonarCloud/$sonarCloudId',
+)()
+const ProductsProductIdLazyRouteImport = createFileRoute(
+  '/products/$productId',
+)()
+const JiraJiraIdLazyRouteImport = createFileRoute('/jira/$jiraId')()
+
+const SettingsLazyRoute = SettingsLazyRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/settings.lazy').then((d) => d.Route))
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SonarCloudSonarCloudIdLazyRoute =
+  SonarCloudSonarCloudIdLazyRouteImport.update({
+    id: '/sonarCloud/$sonarCloudId',
+    path: '/sonarCloud/$sonarCloudId',
+    getParentRoute: () => rootRouteImport,
+  } as any).lazy(() =>
+    import('./routes/sonarCloud/$sonarCloudId.lazy').then((d) => d.Route),
+  )
+const ProductsProductIdLazyRoute = ProductsProductIdLazyRouteImport.update({
+  id: '/products/$productId',
+  path: '/products/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/products/$productId.lazy').then((d) => d.Route),
+)
+const JiraJiraIdLazyRoute = JiraJiraIdLazyRouteImport.update({
+  id: '/jira/$jiraId',
+  path: '/jira/$jiraId',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/jira/$jiraId.lazy').then((d) => d.Route))
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/settings': typeof SettingsLazyRoute
+  '/jira/$jiraId': typeof JiraJiraIdLazyRoute
+  '/products/$productId': typeof ProductsProductIdLazyRoute
+  '/sonarCloud/$sonarCloudId': typeof SonarCloudSonarCloudIdLazyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/settings': typeof SettingsLazyRoute
+  '/jira/$jiraId': typeof JiraJiraIdLazyRoute
+  '/products/$productId': typeof ProductsProductIdLazyRoute
+  '/sonarCloud/$sonarCloudId': typeof SonarCloudSonarCloudIdLazyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
+  '/settings': typeof SettingsLazyRoute
+  '/jira/$jiraId': typeof JiraJiraIdLazyRoute
+  '/products/$productId': typeof ProductsProductIdLazyRoute
+  '/sonarCloud/$sonarCloudId': typeof SonarCloudSonarCloudIdLazyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about'
+  fullPaths:
+    | '/'
+    | '/settings'
+    | '/jira/$jiraId'
+    | '/products/$productId'
+    | '/sonarCloud/$sonarCloudId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about'
-  id: '__root__' | '/' | '/about'
+  to:
+    | '/'
+    | '/settings'
+    | '/jira/$jiraId'
+    | '/products/$productId'
+    | '/sonarCloud/$sonarCloudId'
+  id:
+    | '__root__'
+    | '/'
+    | '/settings'
+    | '/jira/$jiraId'
+    | '/products/$productId'
+    | '/sonarCloud/$sonarCloudId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
+  SettingsLazyRoute: typeof SettingsLazyRoute
+  JiraJiraIdLazyRoute: typeof JiraJiraIdLazyRoute
+  ProductsProductIdLazyRoute: typeof ProductsProductIdLazyRoute
+  SonarCloudSonarCloudIdLazyRoute: typeof SonarCloudSonarCloudIdLazyRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsLazyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -65,12 +123,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/sonarCloud/$sonarCloudId': {
+      id: '/sonarCloud/$sonarCloudId'
+      path: '/sonarCloud/$sonarCloudId'
+      fullPath: '/sonarCloud/$sonarCloudId'
+      preLoaderRoute: typeof SonarCloudSonarCloudIdLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/products/$productId': {
+      id: '/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof ProductsProductIdLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jira/$jiraId': {
+      id: '/jira/$jiraId'
+      path: '/jira/$jiraId'
+      fullPath: '/jira/$jiraId'
+      preLoaderRoute: typeof JiraJiraIdLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
+  SettingsLazyRoute: SettingsLazyRoute,
+  JiraJiraIdLazyRoute: JiraJiraIdLazyRoute,
+  ProductsProductIdLazyRoute: ProductsProductIdLazyRoute,
+  SonarCloudSonarCloudIdLazyRoute: SonarCloudSonarCloudIdLazyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

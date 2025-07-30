@@ -16,7 +16,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-30 flex h-20 w-full items-center bg-background backdrop-blur supports-[backdrop-filter]:bg-background">
       <div className="container flex items-center justify-end">
-        <div className="flex items-center gap-4 mr-8">
+        <div className="flex items-center gap-2 mr-8">
           <ModeToggle />
 
           {/* Settings Gear Icon */}
