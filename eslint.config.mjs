@@ -8,10 +8,14 @@ import react from 'eslint-plugin-react';
 import path from 'path';
 
 export default [
+  // ========================================
+  // SHARED CONFIGURATION
+  // ========================================
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   eslintPluginPrettierRecommended,
 
+  // Global ignores
   {
     ignores: [
       'coverage',
@@ -26,6 +30,7 @@ export default [
     ],
   },
 
+  // Shared language options
   {
     files: ['**/*.{js,mjs,cjs,ts,tsx}'],
     languageOptions: {
@@ -34,15 +39,17 @@ export default [
     },
   },
 
+  // ========================================
+  // FRONTEND CONFIGURATION
+  // ========================================
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['apps/frontend/**/*.{ts,tsx}'],
     languageOptions: {
       parserOptions: {
-        project: ['./apps/*/tsconfig*.json', './packages/*/tsconfig*.json'],
+        project: [path.resolve('apps/frontend/tsconfig*.json')],
         tsconfigRootDir: path.resolve(),
       },
     },
-    ignores: ['**/*.js', '**/*.mjs', '**/*.cjs'],
     settings: {
       react: { version: 'detect' },
     },
@@ -52,19 +59,22 @@ export default [
       'react-refresh': reactRefresh,
     },
     rules: {
+      // React rules
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
       'react/react-in-jsx-scope': 'off',
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
+      'react-refresh/only-export-components': 'off',
+
+      // TypeScript rules
       '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-explicit-any': 'warn',
     },
   },
 
-  // 👇 Backend override
+  // ========================================
+  // BACKEND CONFIGURATION
+  // ========================================
   {
     files: ['apps/backend/**/*.ts'],
     languageOptions: {
@@ -79,10 +89,28 @@ export default [
       '@typescript-eslint': tseslint.plugin,
     },
     rules: {
+      // TypeScript rules
       ...tseslint.configs.recommended[1].rules,
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
+      '@typescript-eslint/no-unused-vars': 'warn',
+    },
+  },
+
+  // ========================================
+  // PACKAGES CONFIGURATION
+  // ========================================
+  {
+    files: ['packages/**/*.{ts,tsx}'],
+    languageOptions: {
+      parserOptions: {
+        project: ['./packages/*/tsconfig*.json'],
+        tsconfigRootDir: path.resolve(),
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': 'warn',
     },
   },
 ];
