@@ -6,8 +6,8 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-import { E2EResult } from './e2e-result.entity';
-import { UnitResult } from './unit-result.entity';
+import { E2EResult } from '../../e2e-results/entities/e2e-result.entity';
+import { UnitResult } from '../../unit-results/entities/unit-result.entity';
 
 @Entity('products')
 export class Product {

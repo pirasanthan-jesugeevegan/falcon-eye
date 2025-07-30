@@ -12,9 +12,10 @@ export class UnitResult {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  // Foreign Key to Product
   @ManyToOne(() => Product, (product) => product.productName, { eager: true })
-  @JoinColumn({ name: 'productName' })
-  productName: Product;
+  @JoinColumn({ name: 'product_id' })
+  product: Product;
 
   @Column({ type: 'timestamp' })
   date: Date;
@@ -26,25 +27,20 @@ export class UnitResult {
   commit: string;
 
   @Column()
-  pull_request: string;
+  pullRequest: string;
 
   @Column()
-  statement_coverage: string;
+  statementCoverage: string;
 
   @Column()
-  function_coverage: string;
+  functionCoverage: string;
 
   @Column()
-  branch_coverage: string;
+  branchCoverage: string;
 
   @Column()
-  line_coverage: string;
+  lineCoverage: string;
 
   @Column()
   author: string;
-
-  // Relationships
-  @ManyToOne(() => Product, (product) => product.unit_results)
-  @JoinColumn({ name: 'product_id' })
-  product: Product;
 }

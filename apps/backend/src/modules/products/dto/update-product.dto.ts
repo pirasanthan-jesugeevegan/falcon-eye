@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsUrl } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class UpdateProductDto {
   @IsOptional()
@@ -12,4 +12,8 @@ export class UpdateProductDto {
   @IsOptional()
   @IsUrl()
   path?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

@@ -3,6 +3,7 @@ node_modules
 .env
 dist
 
+apps/backend/coverage
 apps/backend/dist
 apps/backend/.env
 apps/backend/node_modules

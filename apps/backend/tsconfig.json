@@ -16,7 +16,14 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "types": ["jest", "node"]
   },
-  "exclude": ["node_modules", "src/database/migrations", "dist"]
+  "include": [
+    "src/**/*.ts",
+    "src/database/migrations/**/*.ts",
+    "test/**/*.ts",
+    "ormconfig.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
 }

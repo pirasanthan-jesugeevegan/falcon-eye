@@ -12,9 +12,10 @@ export class E2EResult {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  // Foreign Key to the Product table
   @ManyToOne(() => Product, (product) => product.productName)
-  @JoinColumn({ name: 'productName' }) // Make sure to use the correct field name
-  product: Product; // Many-to-One relationship to Product
+  @JoinColumn({ name: 'product_id' }) // Changed to 'product_id' to match common naming conventions
+  product: Product;
 
   @Column({ type: 'varchar', length: 10 })
   status: 'passed' | 'failed' | 'skipped';
@@ -32,7 +33,7 @@ export class E2EResult {
   skip: number;
 
   @Column({ type: 'text' })
-  report_url: string;
+  reportUrl: string;
 
   @Column({ type: 'varchar', length: 50 })
   environment: string;

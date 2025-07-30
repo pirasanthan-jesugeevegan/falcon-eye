@@ -20,6 +20,9 @@ export default [
       'pnpm-lock.yaml',
       'pnpm-workspace.yaml',
       '**/node_modules',
+      '**/*.js',
+      '**/*.mjs',
+      '**/*.cjs',
     ],
   },
 
@@ -39,6 +42,7 @@ export default [
         tsconfigRootDir: path.resolve(),
       },
     },
+    ignores: ['**/*.js', '**/*.mjs', '**/*.cjs'],
     settings: {
       react: { version: 'detect' },
     },
@@ -66,7 +70,7 @@ export default [
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
-        project: ['./apps/backend/tsconfig.json'],
+        project: [path.resolve('apps/backend/tsconfig.json')],
         tsconfigRootDir: path.resolve(),
         sourceType: 'module',
       },

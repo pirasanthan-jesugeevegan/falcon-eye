@@ -1,99 +1,625 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Falcon Eye Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+The NestJS backend API for the Falcon Eye QA Dashboard, providing RESTful endpoints for product management, Jira integration, and test results tracking.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🎯 Features
 
-## Description
+### Core Modules
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+#### 1. **Products Management**
 
-## Project setup
+- **CRUD Operations**: Create, read, update, and delete products
+- **Product Metadata**: Store product names, icons, paths, and active status
+- **Product Relationships**: Link products to test results and configurations
 
-```bash
-$ pnpm install
+#### 2. **Jira Integration**
+
+- **Jira Configuration Management**:
+  - Store multiple Jira instance configurations
+  - Secure storage of API tokens and credentials
+  - Instance-specific settings and project keys
+- **Jira Query Management**:
+  - Create and manage custom JQL queries
+  - Execute queries against Jira instances
+  - Store query results and execution history
+- **Issue Tracking**:
+  - Fetch and store Jira issues
+  - Real-time issue status monitoring
+  - Issue filtering and search capabilities
+
+#### 3. **Test Results Management**
+
+- **E2E Test Results**:
+  - Store end-to-end test execution results
+  - Track pass/fail/skip statistics
+  - Store test reports and execution metadata
+  - Environment-specific test tracking
+- **Unit Test Results**:
+  - Store code coverage metrics
+  - Track test execution history
+  - Link to commits and pull requests
+  - Author attribution and timestamps
+
+#### 4. **Database Management**
+
+- **TypeORM Integration**: Full ORM support with PostgreSQL
+- **Migrations**: Version-controlled database schema changes
+- **Seeding**: Initial data population for development
+- **Entity Relationships**: Proper foreign key relationships
+
+## 🛠️ Technology Stack
+
+- **NestJS** - Node.js framework with TypeScript
+- **TypeScript** - Type safety and modern JavaScript features
+- **TypeORM** - Database ORM with PostgreSQL support
+- **PostgreSQL** - Primary database
+- **Class Validator** - Request validation and DTOs
+- **Axios** - HTTP client for external API calls
+- **Jest** - Testing framework
+- **ESLint & Prettier** - Code quality and formatting
+
+## 📁 Project Structure
+
+```
+src/
+├── modules/            # Feature modules
+│   ├── products/       # Product management
+│   │   ├── dto/        # Data Transfer Objects
+│   │   │   ├── create-product.dto.ts
+│   │   │   └── update-product.dto.ts
+│   │   ├── entities/   # Database entities
+│   │   │   └── product.entity.ts
+│   │   ├── products.controller.ts
+│   │   ├── products.module.ts
+│   │   └── products.service.ts
+│   ├── jira/          # Jira integration
+│   │   ├── dto/        # Jira DTOs
+│   │   │   ├── create-jira-config.dto.ts
+│   │   │   ├── create-jira-query.dto.ts
+│   │   │   ├── jira-response.dto.ts
+│   │   │   ├── update-jira-config.dto.ts
+│   │   │   └── update-jira-query.dto.ts
+│   │   ├── entities/   # Jira entities
+│   │   │   ├── jira-config.entity.ts
+│   │   │   └── jira-query.entity.ts
+│   │   ├── jira.controller.ts
+│   │   ├── jira.module.ts
+│   │   └── jira.service.ts
+│   ├── e2e-results/   # E2E test results
+│   │   ├── dto/
+│   │   │   └── create-e2e-result.dto.ts
+│   │   ├── entities/
+│   │   │   └── e2e-result.entity.ts
+│   │   ├── e2e-results.controller.ts
+│   │   ├── e2e-results.module.ts
+│   │   └── e2e-results.service.ts
+│   └── unit-results/  # Unit test results
+│       ├── dto/
+│       │   └── create-unit-result.dto.ts
+│       ├── entities/
+│       │   └── unit-result.entity.ts
+│       ├── unit-results.controller.ts
+│       ├── unit-results.module.ts
+│       └── unit-results.service.ts
+├── database/          # Database configuration
+│   ├── migrations/    # Database migrations
+│   │   └── 1752744826695-dataSource.ts.ts
+│   └── seeds/         # Database seeders
+│       └── seed.ts
+├── app.module.ts      # Root application module
+└── main.ts           # Application entry point
 ```
 
-## Compile and run the project
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 16+
+- pnpm 7+
+- PostgreSQL database
+
+### Installation
+
+1. **Install dependencies**
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+pnpm install
 ```
 
-## Run tests
+2. **Environment Setup**
+   Create a `.env` file in the backend directory:
+
+```env
+# Database Configuration
+DATABASE_URL=postgresql://username:password@localhost:5432/qa_dashboard
+
+# Application Configuration
+NODE_ENV=development
+PORT=3000
+
+# Jira Configuration (optional)
+JIRA_API_TIMEOUT=30000
+```
+
+3. **Database Setup**
 
 ```bash
-# unit tests
-$ pnpm run test
+# Run database migrations
+pnpm migration:run
 
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+# Seed the database (optional)
+pnpm seed
 ```
 
-## Deployment
+### Development
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+#### **Start development server**
 
 ```bash
-$ pnpm install -g mau
-$ mau deploy
+pnpm start:dev
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+The API will be available at `http://localhost:3000`
 
-## Resources
+#### **Start in debug mode**
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+pnpm start:debug
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+#### **Build for production**
 
-## Support
+```bash
+pnpm build
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+#### **Start production server**
 
-## Stay in touch
+```bash
+pnpm start:prod
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Available Scripts
 
-## License
+- `pnpm start` - Start the application
+- `pnpm start:dev` - Start in development mode with hot reload
+- `pnpm start:debug` - Start in debug mode
+- `pnpm start:prod` - Start production server
+- `pnpm build` - Build the application
+- `pnpm test` - Run tests
+- `pnpm test:watch` - Run tests in watch mode
+- `pnpm test:cov` - Run tests with coverage
+- `pnpm lint` - Run ESLint
+- `pnpm format` - Format code with Prettier
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+## 🔧 Database Management
+
+### Migrations
+
+#### **Generate a migration**
+
+```bash
+pnpm migration:generate
+```
+
+#### **Run migrations**
+
+```bash
+pnpm migration:run
+```
+
+#### **Revert migrations**
+
+```bash
+pnpm migration:revert
+```
+
+### Seeding
+
+#### **Run database seeds**
+
+```bash
+pnpm seed
+```
+
+### Database Testing
+
+#### **Test database connection**
+
+```bash
+pnpm db:test
+```
+
+## 🔌 API Documentation
+
+### Base URL
+
+```
+http://localhost:3000
+```
+
+### Authentication
+
+Currently, the API does not require authentication. All endpoints are publicly accessible.
+
+### API Endpoints
+
+#### **Products Management**
+
+##### `GET /products`
+
+Get all products
+
+- **Response**: Array of Product objects
+- **Status**: 200 OK
+
+##### `GET /products/:id`
+
+Get a specific product by ID
+
+- **Parameters**: `id` (string) - Product UUID
+- **Response**: Product object
+- **Status**: 200 OK
+
+##### `POST /products`
+
+Create a new product
+
+- **Request Body**:
+
+```json
+{
+  "productName": "string (required)",
+  "icon": "string (optional)",
+  "path": "string (optional)",
+  "isActive": "boolean (optional, default: true)"
+}
+```
+
+- **Response**: Created Product object
+- **Status**: 201 Created
+
+##### `PATCH /products/:id`
+
+Update a product
+
+- **Parameters**: `id` (string) - Product UUID
+- **Request Body**: Partial Product object
+- **Response**: Updated Product object
+- **Status**: 200 OK
+
+##### `DELETE /products/:id`
+
+Delete a product
+
+- **Parameters**: `id` (string) - Product UUID
+- **Response**: No content
+- **Status**: 204 No Content
+
+#### **Jira Integration**
+
+##### **Jira Configuration Endpoints**
+
+##### `GET /api/jira/config`
+
+Get all Jira configurations
+
+- **Response**: Array of JiraConfig objects
+- **Status**: 200 OK
+
+##### `GET /api/jira/config/:id`
+
+Get a specific Jira configuration
+
+- **Parameters**: `id` (string) - Configuration UUID
+- **Response**: JiraConfig object
+- **Status**: 200 OK
+
+##### `POST /api/jira/config`
+
+Create a new Jira configuration
+
+- **Request Body**:
+
+```json
+{
+  "instanceName": "string (required)",
+  "baseUrl": "string (required, URL)",
+  "email": "string (required, email)",
+  "apiToken": "string (required)",
+  "projectKey": "string (optional)"
+}
+```
+
+- **Response**: Created JiraConfig object
+- **Status**: 201 Created
+
+##### `PATCH /api/jira/config/:id`
+
+Update a Jira configuration
+
+- **Parameters**: `id` (string) - Configuration UUID
+- **Request Body**: Partial JiraConfig object
+- **Response**: Updated JiraConfig object
+- **Status**: 200 OK
+
+##### `DELETE /api/jira/config/:id`
+
+Delete a Jira configuration
+
+- **Parameters**: `id` (string) - Configuration UUID
+- **Response**: No content
+- **Status**: 204 No Content
+
+##### **Jira Query Endpoints**
+
+##### `GET /api/jira/query`
+
+Get all Jira queries
+
+- **Response**: Array of JiraQuery objects
+- **Status**: 200 OK
+
+##### `GET /api/jira/query/:id`
+
+Get a specific Jira query
+
+- **Parameters**: `id` (string) - Query UUID
+- **Response**: JiraQuery object
+- **Status**: 200 OK
+
+##### `GET /api/jira/config/:configId/query`
+
+Get queries by configuration ID
+
+- **Parameters**: `configId` (string) - Configuration UUID
+- **Response**: Array of JiraQuery objects
+- **Status**: 200 OK
+
+##### `POST /api/jira/query`
+
+Create a new Jira query
+
+- **Request Body**:
+
+```json
+{
+  "name": "string (required)",
+  "jqlQuery": "string (required)",
+  "description": "string (optional)",
+  "jiraConfigId": "string (required, UUID)",
+  "isActive": "boolean (optional, default: true)"
+}
+```
+
+- **Response**: Created JiraQuery object
+- **Status**: 201 Created
+
+##### `PATCH /api/jira/query/:id`
+
+Update a Jira query
+
+- **Parameters**: `id` (string) - Query UUID
+- **Request Body**: Partial JiraQuery object
+- **Response**: Updated JiraQuery object
+- **Status**: 200 OK
+
+##### `DELETE /api/jira/query/:id`
+
+Delete a Jira query
+
+- **Parameters**: `id` (string) - Query UUID
+- **Response**: No content
+- **Status**: 204 No Content
+
+##### `GET /api/jira/query/:id/execute`
+
+Execute a Jira query
+
+- **Parameters**: `id` (string) - Query UUID
+- **Response**: Query execution results with issues
+- **Status**: 200 OK
+
+#### **E2E Test Results**
+
+##### `GET /e2e-results`
+
+Get all E2E test results
+
+- **Query Parameters**: `productName` (string, optional) - Filter by product
+- **Response**: Array of E2EResult objects
+- **Status**: 200 OK
+
+##### `GET /e2e-results/:id`
+
+Get a specific E2E test result
+
+- **Parameters**: `id` (string) - Result UUID
+- **Response**: E2EResult object
+- **Status**: 200 OK
+
+##### `POST /e2e-results`
+
+Create a new E2E test result
+
+- **Request Body**:
+
+```json
+{
+  "productName": "string (required)",
+  "timestamp": "Date (required)",
+  "pass": "number (required)",
+  "fail": "number (required)",
+  "skip": "number (required)",
+  "report_url": "string (required)",
+  "environment": "string (required)",
+  "duration": "string (required)",
+  "tag": "string (required)"
+}
+```
+
+- **Response**: Created E2EResult object
+- **Status**: 201 Created
+
+#### **Unit Test Results**
+
+##### `GET /unit-results`
+
+Get all unit test results
+
+- **Query Parameters**: `productName` (string, optional) - Filter by product
+- **Response**: Array of UnitResult objects
+- **Status**: 200 OK
+
+##### `GET /unit-results/:id`
+
+Get a specific unit test result
+
+- **Parameters**: `id` (string) - Result UUID
+- **Response**: UnitResult object
+- **Status**: 200 OK
+
+##### `POST /unit-results`
+
+Create a new unit test result
+
+- **Request Body**:
+
+```json
+{
+  "productName": "string (required)",
+  "date": "Date (required)",
+  "percentage": "number (required)",
+  "commit": "string (required)",
+  "pull_request": "string (required)",
+  "statement_coverage": "number (required)",
+  "function_coverage": "number (required)",
+  "branch_coverage": "number (required)",
+  "line_coverage": "number (required)",
+  "author": "string (required)"
+}
+```
+
+- **Response**: Created UnitResult object
+- **Status**: 201 Created
+
+## 🏗️ Architecture
+
+### Module Structure
+
+The application follows NestJS module architecture:
+
+- Each feature is organized as a separate module
+- Modules contain controllers, services, DTOs, and entities
+- Shared functionality is extracted into common modules
+
+### Database Design
+
+- **TypeORM Entities**: Define database schema and relationships
+- **Migrations**: Version-controlled schema changes
+- **Seeding**: Initial data population
+- **Relationships**: Proper foreign key constraints
+
+### Service Layer
+
+- **Business Logic**: Encapsulated in service classes
+- **Data Access**: TypeORM repositories for database operations
+- **External APIs**: Axios for Jira API integration
+- **Error Handling**: Comprehensive error management
+
+### Validation
+
+- **DTOs**: Data Transfer Objects with validation decorators
+- **Class Validator**: Request validation and sanitization
+- **Type Safety**: Full TypeScript support throughout
+
+## 🔒 Security Considerations
+
+### API Security
+
+- Input validation on all endpoints
+- SQL injection prevention through TypeORM
+- CORS configuration for frontend integration
+- Rate limiting (can be added as needed)
+
+### Data Protection
+
+- Secure storage of Jira API tokens
+- Environment variable management
+- Database connection security
+
+## 🧪 Testing
+
+### Testing Strategy
+
+- **Unit Tests**: Individual service and controller tests
+- **Integration Tests**: API endpoint testing
+- **E2E Tests**: Full application flow testing
+
+### Running Tests
+
+```bash
+# Run all tests
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run tests with coverage
+pnpm test:cov
+
+# Run E2E tests
+pnpm test:e2e
+```
+
+## 📦 Deployment
+
+### Production Build
+
+```bash
+pnpm build
+```
+
+### Environment Configuration
+
+- Set `NODE_ENV=production`
+- Configure production database URL
+- Set appropriate CORS origins
+- Configure logging levels
+
+### Docker Support
+
+The application can be containerized for deployment:
+
+- Dockerfile for application container
+- Docker Compose for local development
+- Environment-specific configurations
+
+## 🔍 Monitoring & Logging
+
+### Logging
+
+- Structured logging with NestJS logger
+- Different log levels for development and production
+- Error tracking and monitoring
+
+### Health Checks
+
+- Database connection health
+- External API connectivity
+- Application status endpoints
+
+## 🤝 Contributing
+
+1. Follow NestJS best practices and conventions
+2. Write comprehensive tests for new features
+3. Use proper TypeScript types and interfaces
+4. Follow the existing code style and patterns
+5. Update documentation for API changes
+
+## 📚 Additional Resources
+
+- [NestJS Documentation](https://docs.nestjs.com/)
+- [TypeORM Documentation](https://typeorm.io/)
+- [Class Validator Documentation](https://github.com/typestack/class-validator)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
