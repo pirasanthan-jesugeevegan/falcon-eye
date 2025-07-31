@@ -1,0 +1,12 @@
+{
+  "name": "@falcon-eye/infra",
+  "type": "module",
+  "scripts": {
+    "dev": "sst dev",
+    "deploy:sst": "sst deploy",
+    "remove:sst": "sst remove"
+  },
+  "devDependencies": {
+    "sst": "^3.17.10"
+  }
+}

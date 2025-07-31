@@ -4,20 +4,28 @@
   "description": "QA Monitoring Tool",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint .",
-    "format": "prettier --write .",
-    "prepare": "husky",
+    "backend:build": "pnpm --filter @falcon-eye/backend run build",
+    "backend:db:test": "pnpm --filter @falcon-eye/backend run db:test",
+    "backend:migration:generate": "pnpm --filter @falcon-eye/backend run migration:generate",
+    "backend:migration:revert": "pnpm --filter @falcon-eye/backend run migration:revert",
+    "backend:migration:run": "pnpm --filter @falcon-eye/backend run migration:run",
+    "backend:seed": "pnpm --filter @falcon-eye/backend run seed",
+    "backend:start": "pnpm --filter @falcon-eye/backend run start:dev",
+    "backend:test": "pnpm --filter @falcon-eye/backend run test",
+    "build": "pnpm run build:packages && pnpm run backend:build && pnpm run frontend:build",
     "common": "pnpm --filter common",
-    "frontend": "pnpm --filter frontend",
-    "backend:migration:generate": "cd apps/backend && pnpm run migration:generate",
-    "backend:migration:run": "cd apps/backend && pnpm run migration:run",
-    "backend:migration:revert": "cd apps/backend && pnpm run migration:revert",
-    "backend:seed": "cd apps/backend && pnpm run seed",
-    "backend:start": "cd apps/backend && pnpm run start:dev",
-    "backend:build": "cd apps/backend && pnpm run build",
-    "backend:db:test": "cd apps/backend && pnpm run db:test",
-    "backend:test": "cd apps/backend && pnpm run test"
+    "deploy:infra": "pnpm --filter @falcon-eye/infra deploy:sst",
+    "dev": "concurrently \"pnpm run backend:start\" \"pnpm run frontend:start\"",
+    "dev:infra": "pnpm --filter @falcon-eye/infra dev",
+    "format": "prettier --write .",
+    "frontend": "pnpm --filter @falcon-eye/frontend",
+    "frontend:build": "pnpm --filter @falcon-eye/frontend run build",
+    "frontend:preview": "pnpm --filter @falcon-eye/frontend run preview",
+    "frontend:start": "pnpm --filter @falcon-eye/frontend run dev",
+    "lint": "eslint .",
+    "prepare": "husky",
+    "remove:infra": "pnpm --filter @falcon-eye/infra remove:sst",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +35,8 @@
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^9.32.0",
+    "@types/aws-lambda": "8.10.152",
+    "concurrently": "^8.2.0",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.3",
@@ -41,9 +51,9 @@
     "typescript-eslint": "^8.38.0"
   },
   "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown",
     "**/*.{js,ts,tsx}": [
       "eslint --fix"
-    ],
-    "**/*": "prettier --write --ignore-unknown"
+    ]
   }
 }
