@@ -7,7 +7,7 @@ export default $config({
   app(_input) {
     return {
       name: 'pj-falcon-eye-stack',
-      region: 'us-east-1',
+      region: 'eu-west-2',
       home: 'aws',
     };
   },
