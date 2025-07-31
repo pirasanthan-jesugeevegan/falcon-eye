@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { Dot } from 'lucide-react';
 import type { FileRoutesByFullPath } from '../../routeTree.gen';
+import { Separator } from '@/components/ui/separator';
 
 interface SidebarItem {
   id: string;
@@ -32,8 +33,8 @@ export const SidebarSection = ({
   if (filteredItems.length === 0) return null;
 
   return (
-    <div className="pt-4">
-      <hr className="antialiased text-[0.875rem] font-normal leading-[1.334em] font-roboto text-[#364152] box-border my-[2px] mb-[10px] shrink-0 border-t border-solid border-[#e3e8ef] opacity-100" />
+    <div className="pt-2">
+      <Separator className="my-2" />
       <div className="px-3 text-sm font-medium text-foreground">{title}</div>
       <div className="px-3 mb-2 text-xs text-muted-foreground">
         {description}
