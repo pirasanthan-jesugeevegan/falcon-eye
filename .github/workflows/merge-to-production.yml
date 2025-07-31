@@ -89,8 +89,8 @@ jobs:
           DEPLOY_OUTPUT=$(pnpm run deploy:sst --stage production 2>&1)
           echo "$DEPLOY_OUTPUT"
 
-          # Extract URL from SST output (looks for patterns like "https://...")
-          URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^[:space:]]*' | head -1 || echo "Production URL not found")
+          # Extract URL from SST output (looks for CloudFront URLs specifically)
+          URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[a-z0-9]*\.cloudfront\.net' | head -1 || echo "Production URL not found")
           echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Comment production URL
