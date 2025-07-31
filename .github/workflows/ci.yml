@@ -200,7 +200,8 @@ jobs:
 
       - name: Check for vulnerabilities
         run: |
-          if pnpm audit --audit-level high; then
+          pnpm audit --audit-level high || {
             echo "High severity vulnerabilities found!"
             exit 1
-          fi
+          }
+          echo "No high severity vulnerabilities found"
