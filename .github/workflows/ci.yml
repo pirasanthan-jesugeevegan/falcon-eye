@@ -68,7 +68,7 @@ jobs:
           key: ${{ needs.setup.outputs.cache-key }}
 
   lint:
-    needs: install
+    needs: [install, setup]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -96,7 +96,7 @@ jobs:
         run: pnpm run lint
 
   test:
-    needs: install
+    needs: [install, setup]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -124,7 +124,7 @@ jobs:
         run: pnpm run backend:test
 
   build:
-    needs: install
+    needs: [install, setup]
     runs-on: ubuntu-latest
     outputs:
       build-cache-key: ${{ steps.build-cache.outputs.value }}
@@ -171,7 +171,7 @@ jobs:
           key: ${{ steps.build-cache.outputs.value }}
 
   security:
-    needs: install
+    needs: [install, setup]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
