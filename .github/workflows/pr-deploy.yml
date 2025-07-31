@@ -80,7 +80,12 @@ jobs:
         id: get-pr-url
         run: |
           cd infra
-          URL=$(pnpm run deploy:sst --stage pr-${{ github.event.number }} --output-format json | jq -r '.FrontendSite.url // .SiteUrl // "PR URL not found"')
+          # Deploy and capture output
+          DEPLOY_OUTPUT=$(pnpm run deploy:sst --stage pr-${{ github.event.number }} 2>&1)
+          echo "$DEPLOY_OUTPUT"
+
+          # Extract URL from SST output (looks for patterns like "https://...")
+          URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^[:space:]]*' | head -1 || echo "PR URL not found")
           echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Comment PR URL
