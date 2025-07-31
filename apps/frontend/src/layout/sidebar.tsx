@@ -108,7 +108,7 @@ export function Sidebar() {
         )}
       >
         <div className="px-4 py-6">
-          <h1 className="text-2xl font-bold mb-6 px-3">Falcon Eye</h1>
+          <h1 className="text-2xl font-bold mb-6 px-3">Falcon Eyes</h1>
 
           <ScrollArea className="h-[calc(100vh-140px)]">
             <div className="space-y-1">
