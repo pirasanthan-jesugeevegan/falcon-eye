@@ -1,0 +1,105 @@
+name: Deploy to Production (PR Merge)
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+env:
+  AWS_REGION: us-east-1
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10.13.1'
+
+jobs:
+  deploy-production:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    # environment: production  # Uncomment after creating GitHub environment
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: production-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ runner.os }}
+          restore-keys: |
+            production-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            production-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            **/node_modules
+            .pnpm-store
+          key: production-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ runner.os }}
+
+      - name: Restore build cache
+        uses: actions/cache@v4
+        with:
+          path: apps/frontend/dist
+          key: production-build-${{ hashFiles('apps/frontend/src/**/*') }}-${{ hashFiles('apps/frontend/package.json') }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to production
+        run: |
+          cd infra
+          pnpm run deploy:sst --stage production
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
+
+      - name: Get production URL
+        id: get-production-url
+        run: |
+          cd infra
+          URL=$(pnpm run deploy:sst --stage production --output-format json | jq -r '.FrontendSite.url // .SiteUrl // "Production URL not found"')
+          echo "url=$URL" >> $GITHUB_OUTPUT
+
+      - name: Comment production URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = `🎉 **Production Deployment Complete!**\n\n**PR:** #${context.issue.number}\n**Production URL:** ${process.env.PRODUCTION_URL}\n\nDeployment successful! 🚀`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: comment
+            });
+
+      - name: Notify team
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log(`Production deployment completed for PR #${context.issue.number}!`);
+        env:
+          PRODUCTION_URL: ${{ steps.get-production-url.outputs.url }}
