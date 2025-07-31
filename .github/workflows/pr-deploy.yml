@@ -5,6 +5,11 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches: [master]
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 env:
   AWS_REGION: us-east-1
   NODE_VERSION: '20'
@@ -80,7 +85,12 @@ jobs:
         id: get-pr-url
         run: |
           cd infra
-          URL=$(pnpm run deploy:sst --stage pr-${{ github.event.number }} --output-format json | jq -r '.FrontendSite.url // .SiteUrl // "PR URL not found"')
+          # Deploy and capture output
+          DEPLOY_OUTPUT=$(pnpm run deploy:sst --stage pr-${{ github.event.number }} 2>&1)
+          echo "$DEPLOY_OUTPUT"
+
+          # Extract URL from SST output (looks for CloudFront URLs specifically)
+          URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[a-z0-9]*\.cloudfront\.net' | head -1 || echo "PR URL not found")
           echo "url=$URL" >> $GITHUB_OUTPUT
 
       - name: Comment PR URL
