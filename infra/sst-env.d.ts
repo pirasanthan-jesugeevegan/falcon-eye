@@ -16,6 +16,10 @@ declare module 'sst' {
     DatabaseVPC: {
       type: 'sst.aws.Vpc';
     };
+    FrontendSite: {
+      type: 'sst.aws.StaticSite';
+      url: string;
+    };
     NestJSAPI: {
       name: string;
       type: 'sst.aws.Function';
