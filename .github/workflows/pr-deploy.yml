@@ -17,7 +17,7 @@ env:
 
 jobs:
   deploy-pr:
-    if: github.event.action == 'closed'
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     environment: pr-${{ github.event.number }}
 
@@ -157,9 +157,9 @@ jobs:
           FRONTEND_URL: ${{ steps.get-pr-urls.outputs.frontend_url }}
 
   destroy-pr:
-    if: github.event.action != 'closed'
+    if: github.event.action == 'closed'
     runs-on: ubuntu-latest
-    environment: pr-7
+    environment: pr-${{ github.event.number }}
 
     steps:
       - name: Checkout code
@@ -178,11 +178,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # - name: Install SST
-      #   run: |
-      #     cd infra
-      #     pnpm install
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -194,7 +189,7 @@ jobs:
         run: |
           cd infra
           chmod +x remove-all.sh
-          STAGE=pr-7 ./remove-all.sh
+          STAGE=pr-${{ github.event.number }} ./remove-all.sh
         env:
           AWS_REGION: ${{ env.AWS_REGION }}
         continue-on-error: true
