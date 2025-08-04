@@ -13,12 +13,18 @@ export default $config({
   },
   // Your app's resources
   async run() {
+    const { createDatabaseStack } = await import('./stacks/database');
+    const { createBackendStack } = await import('./stacks/backend');
     const { createFrontendStack } = await import('./stacks/frontend');
-    const frontend = createFrontendStack();
+
+    const { db, vpc } = createDatabaseStack();
+    const { url: backendUrl } = createBackendStack(db, vpc);
+    const { url: frontendUrl } = createFrontendStack(backendUrl);
 
     // Your app's outputs
     return {
-      url: frontend.url,
+      frontendUrl,
+      backendUrl,
     };
   },
 });

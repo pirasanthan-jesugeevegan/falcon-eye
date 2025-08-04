@@ -1,4 +1,6 @@
-export function createFrontendStack() {
+import { Input } from '.sst/platform/src/components/input';
+
+export function createFrontendStack(backendUrl: Input<string>) {
   const site = new sst.aws.StaticSite('FrontendSite', {
     path: '../apps/frontend',
     build: {
@@ -7,6 +9,7 @@ export function createFrontendStack() {
     },
     environment: {
       NODE_ENV: 'production',
+      VITE_API_BASE_URL: backendUrl,
     },
   });
 
