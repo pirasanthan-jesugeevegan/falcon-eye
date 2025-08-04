@@ -26,11 +26,11 @@ if ! command_exists aws; then
     exit 1
 fi
 
-# Check if SST is installed
-if ! command_exists sst; then
-    echo "❌ SST is not installed. Please install it first."
-    exit 1
-fi
+# # Check if SST is installed
+# if ! command_exists sst; then
+#     echo "❌ SST is not installed. Please install it first."
+#     exit 1
+# fi
 
 echo "📋 Step 1: Attempting SST remove first..."
 if sst remove --stage "$STAGE"; then
