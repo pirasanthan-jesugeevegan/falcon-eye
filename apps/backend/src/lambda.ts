@@ -30,12 +30,9 @@ async function bootstrap(): Promise<Handler> {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: false, // Change this to false
-      skipMissingProperties: true,
       transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
+      forbidNonWhitelisted: true, // Allow unknown properties
+      skipMissingProperties: false,
     }),
   );
 
@@ -50,6 +47,9 @@ async function bootstrap(): Promise<Handler> {
 
 export const handler: Handler = async (event, context) => {
   try {
+    // Debug logging
+    console.log('Lambda event:', JSON.stringify(event, null, 2));
+
     server = server ?? (await bootstrap());
     return server(event, context);
   } catch (error) {
