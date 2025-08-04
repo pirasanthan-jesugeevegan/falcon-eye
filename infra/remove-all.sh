@@ -29,8 +29,7 @@ fi
 # Check if SST is installed
 if ! command_exists sst; then
     echo "❌ SST is not installed. Please install it first."
-    pnpm install -g sst
-    sst --version
+    npm install -g sst
     # exit 1
 fi
 

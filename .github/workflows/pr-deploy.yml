@@ -157,9 +157,9 @@ jobs:
           FRONTEND_URL: ${{ steps.get-pr-urls.outputs.frontend_url }}
 
   destroy-pr:
-    if: github.event.action == 'closed'
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
-    environment: pr-${{ github.event.number }}
+    environment: pr-7
 
     steps:
       - name: Checkout code
@@ -194,7 +194,7 @@ jobs:
         run: |
           cd infra
           chmod +x remove-all.sh
-          STAGE=pr-${{ github.event.number }} ./remove-all.sh
+          STAGE=pr-7 ./remove-all.sh
         env:
           AWS_REGION: ${{ env.AWS_REGION }}
         continue-on-error: true
