@@ -7,6 +7,13 @@ import { UnitResultsModule } from './modules/unit-results/unit-results.module';
 import { JiraModule } from './modules/jira/jira.module';
 import { join } from 'path';
 import { SonarCloudModule } from './modules/sonarcloud/sonarcloud.module';
+import { Product } from './modules/products/entities/product.entity';
+import { E2EResult } from './modules/e2e-results/entities/e2e-result.entity';
+import { UnitResult } from './modules/unit-results/entities/unit-result.entity';
+import { JiraConfig } from './modules/jira/entities/jira-config.entity';
+import { JiraQuery } from './modules/jira/entities/jira-query.entity';
+import { SonarCloudConfig } from './modules/sonarcloud/entities/sonarcloud-config.entity';
+import { SonarCloudQuery } from './modules/sonarcloud/entities/sonarcloud-query.entity';
 
 @Module({
   imports: [
@@ -23,8 +30,16 @@ import { SonarCloudModule } from './modules/sonarcloud/sonarcloud.module';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [join(__dirname, '**', '*.entity.{ts,js}')],
-        synchronize: configService.get<string>('NODE_ENV') !== 'production',
+        entities: [
+          Product,
+          E2EResult,
+          UnitResult,
+          JiraConfig,
+          JiraQuery,
+          SonarCloudConfig,
+          SonarCloudQuery,
+        ],
+        synchronize: true,
         migrations: [join(__dirname, 'database', 'migrations', '*.{ts,js}')],
         migrationsRun: true,
         ssl:

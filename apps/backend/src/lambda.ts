@@ -26,12 +26,16 @@ async function bootstrap(): Promise<Handler> {
     credentials: true,
   });
 
-  // Global validation pipe
+  // Global validation pipe with proper configuration for Lambda
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
       transform: true,
-      forbidNonWhitelisted: true,
+      forbidNonWhitelisted: false, // Changed to false to prevent "property X should not exist" errors
+      skipMissingProperties: true, // Changed to true to allow missing properties
+      transformOptions: {
+        enableImplicitConversion: true, // Added this for better type conversion
+      },
     }),
   );
 
@@ -41,11 +45,28 @@ async function bootstrap(): Promise<Handler> {
   await app.init();
 
   const expressApp = app.getHttpAdapter().getInstance();
-  return serverless(expressApp);
+
+  // Configure serverless-http with proper body parsing
+  return serverless(expressApp, {
+    request: (request: any, event: any, context: any) => {
+      // Ensure body is properly parsed as JSON
+      if (event.body && typeof event.body === 'string') {
+        try {
+          request.body = JSON.parse(event.body);
+        } catch (e) {
+          // If parsing fails, keep as string
+          request.body = event.body;
+        }
+      }
+    },
+  });
 }
 
 export const handler: Handler = async (event, context) => {
   try {
+    // Debug logging
+    console.log('Lambda event:', JSON.stringify(event, null, 2));
+
     server = server ?? (await bootstrap());
     return server(event, context);
   } catch (error) {
