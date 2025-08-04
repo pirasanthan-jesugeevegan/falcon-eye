@@ -178,10 +178,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install SST
-        run: |
-          cd infra
-          npm install
+      # - name: Install SST
+      #   run: |
+      #     cd infra
+      #     pnpm install
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
