@@ -33,7 +33,7 @@ if ! command_exists sst; then
 fi
 
 echo "📋 Step 1: Attempting SST remove first..."
-if sst remove; then
+if sst remove --stage "$STAGE"; then
     echo "✅ SST remove successful! All resources cleaned up."
     exit 0
 fi
@@ -42,7 +42,7 @@ echo "⚠️  SST remove failed, proceeding with manual cleanup..."
 
 echo "📋 Step 2: Cleaning up RDS instances..."
 RDS_INSTANCES=$(aws rds describe-db-instances \
-    --query "DBInstances[?contains(DBInstanceIdentifier, 'pj-falcon-eye-${STAGE}')].DBInstanceIdentifier" \
+    --query "DBInstances[?contains(DBInstanceIdentifier, 'pj-falcon-eye-${STAGE}') || contains(DBInstanceIdentifier, '${STACK_NAME}-${STAGE}')].DBInstanceIdentifier" \
     --output text 2>/dev/null || echo "")
 
 if [ ! -z "$RDS_INSTANCES" ]; then
@@ -80,7 +80,7 @@ fi
 
 echo "📋 Step 4: Cleaning up Lambda functions..."
 LAMBDA_FUNCTIONS=$(aws lambda list-functions \
-    --query "Functions[?contains(FunctionName, '${STACK_NAME}-${STAGE}')].FunctionName" \
+    --query "Functions[?contains(FunctionName, '${STACK_NAME}-${STAGE}') || contains(FunctionName, '${STAGE}')].FunctionName" \
     --output text 2>/dev/null || echo "")
 
 if [ ! -z "$LAMBDA_FUNCTIONS" ]; then
@@ -113,7 +113,7 @@ fi
 echo "📋 Step 6: Cleaning up CloudWatch log groups..."
 LOG_GROUPS=$(aws logs describe-log-groups \
     --no-cli-pager \
-    --query "logGroups[?contains(logGroupName, '${STACK_NAME}-${STAGE}')].logGroupName" \
+    --query "logGroups[?contains(logGroupName, '${STACK_NAME}-${STAGE}') || contains(logGroupName, '${STAGE}')].logGroupName" \
     --output text 2>/dev/null || echo "")
 
 if [ ! -z "$LOG_GROUPS" ]; then
@@ -129,7 +129,7 @@ fi
 echo "📋 Step 7: Cleaning up IAM roles..."
 IAM_ROLES=$(aws iam list-roles \
     --no-cli-pager \
-    --query "Roles[?contains(RoleName, '${STACK_NAME}-${STAGE}')].RoleName" \
+    --query "Roles[?contains(RoleName, '${STACK_NAME}-${STAGE}') || contains(RoleName, '${STAGE}')].RoleName" \
     --output text 2>/dev/null || echo "")
 
 if [ ! -z "$IAM_ROLES" ]; then
@@ -155,7 +155,7 @@ else
 fi
 
 echo "📋 Step 9: Final SST remove attempt..."
-if sst remove; then
+if sst remove --stage "$STAGE"; then
     echo "✅ Final SST remove successful!"
 else
     echo "⚠️  Final SST remove failed, but manual cleanup completed"
