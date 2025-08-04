@@ -30,9 +30,9 @@ async function bootstrap(): Promise<Handler> {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
+      forbidNonWhitelisted: true,
+      skipMissingProperties: true,
       transform: true,
-      forbidNonWhitelisted: false,
-      skipMissingProperties: false,
     }),
   );
 
