@@ -31,7 +31,8 @@ async function bootstrap(): Promise<Handler> {
     new ValidationPipe({
       whitelist: true,
       transform: true,
-      forbidNonWhitelisted: true,
+      forbidNonWhitelisted: false,
+      skipMissingProperties: false,
     }),
   );
 
