@@ -17,7 +17,7 @@ env:
 
 jobs:
   deploy-pr:
-    if: github.event.action != 'closed'
+    if: github.event.action == 'closed'
     runs-on: ubuntu-latest
     environment: pr-${{ github.event.number }}
 
