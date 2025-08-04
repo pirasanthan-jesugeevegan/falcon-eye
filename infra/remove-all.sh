@@ -29,7 +29,8 @@ fi
 # Check if SST is installed
 if ! command_exists sst; then
     echo "❌ SST is not installed. Please install it first."
-    pnpm add --save-dev @serverless-stack/cli
+    pnpm install -g sst
+    sst --version
     # exit 1
 fi
 
