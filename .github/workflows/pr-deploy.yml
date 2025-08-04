@@ -64,8 +64,13 @@ jobs:
       - name: Restore build cache
         uses: actions/cache@v4
         with:
-          path: apps/frontend/dist
-          key: pr-${{ github.event.number }}-build-${{ hashFiles('apps/frontend/src/**/*') }}-${{ hashFiles('apps/frontend/package.json') }}
+          path: |
+            apps/frontend/dist
+            apps/backend/dist
+          key: pr-${{ github.event.number }}-build-${{ hashFiles('apps/frontend/src/**/*') }}-${{ hashFiles('apps/backend/src/**/*') }}-${{ hashFiles('apps/frontend/package.json') }}-${{ hashFiles('apps/backend/package.json') }}
+
+      - name: Build full stack
+        run: pnpm run build
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -81,23 +86,44 @@ jobs:
         env:
           AWS_REGION: ${{ env.AWS_REGION }}
 
-      - name: Get PR URL
-        id: get-pr-url
+      - name: Get PR URLs
+        id: get-pr-urls
         run: |
           cd infra
           # Deploy and capture output
           DEPLOY_OUTPUT=$(pnpm run deploy:sst --stage pr-${{ github.event.number }} 2>&1)
           echo "$DEPLOY_OUTPUT"
 
-          # Extract URL from SST output (looks for CloudFront URLs specifically)
-          URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[a-z0-9]*\.cloudfront\.net' | head -1 || echo "PR URL not found")
-          echo "url=$URL" >> $GITHUB_OUTPUT
+          # Extract backend URL from NestJSAPI resource
+          BACKEND_URL=$(echo "$DEPLOY_OUTPUT" | grep -A 1 "NestJSAPI:" | grep "https://" | head -1 || echo "Backend URL not found")
+          echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
 
-      - name: Comment PR URL
+          # Extract frontend URL from FrontendSite resource
+          FRONTEND_URL=$(echo "$DEPLOY_OUTPUT" | grep -A 1 "FrontendSite:" | grep "https://" | head -1 || echo "Frontend URL not found")
+          echo "frontend_url=$FRONTEND_URL" >> $GITHUB_OUTPUT
+
+          # Debug output
+          echo "Extracted Backend URL: $BACKEND_URL"
+          echo "Extracted Frontend URL: $FRONTEND_URL"
+
+      - name: Comment PR URLs
         uses: actions/github-script@v7
         with:
           script: |
-            const comment = `🚀 **PR Environment Deployed!**\n\n**Preview URL:** ${process.env.PR_URL}\n\n**Stage:** \`pr-${context.issue.number}\`\n\nThis environment will be automatically destroyed when the PR is merged or closed.`;
+            const backendUrl = process.env.BACKEND_URL;
+            const frontendUrl = process.env.FRONTEND_URL;
+
+            let comment = `🚀 **PR Environment Deployed!**\n\n`;
+
+            if (frontendUrl && frontendUrl !== "Frontend URL not found") {
+              comment += `**Frontend URL:** ${frontendUrl}\n`;
+            }
+
+            if (backendUrl && backendUrl !== "Backend URL not found") {
+              comment += `**Backend API URL:** ${backendUrl}\n`;
+            }
+
+            comment += `\n**Stage:** \`pr-${context.issue.number}\`\n\nThis environment will be automatically destroyed when the PR is merged or closed.`;
 
             // Find and update existing comment or create new one
             const comments = await github.rest.issues.listComments({
@@ -127,7 +153,8 @@ jobs:
               });
             }
         env:
-          PR_URL: ${{ steps.get-pr-url.outputs.url }}
+          BACKEND_URL: ${{ steps.get-pr-urls.outputs.backend_url }}
+          FRONTEND_URL: ${{ steps.get-pr-urls.outputs.frontend_url }}
 
   destroy-pr:
     if: github.event.action == 'closed'
@@ -161,7 +188,8 @@ jobs:
       - name: Destroy PR environment
         run: |
           cd infra
-          pnpm run remove:sst --stage pr-${{ github.event.number }}
+          chmod +x remove-all.sh
+          STAGE=pr-${{ github.event.number }} ./remove-all.sh
         env:
           AWS_REGION: ${{ env.AWS_REGION }}
         continue-on-error: true

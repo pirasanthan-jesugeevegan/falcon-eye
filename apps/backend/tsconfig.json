@@ -23,7 +23,8 @@
     "src/**/*.ts",
     "src/database/migrations/**/*.ts",
     "test/**/*.ts",
-    "ormconfig.ts"
+    "ormconfig.ts",
+    "handler.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }

@@ -18,7 +18,11 @@ import { SonarCloudModule } from './modules/sonarcloud/sonarcloud.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        url: configService.get<string>('DATABASE_URL'),
+        host: configService.get<string>('DB_HOST'),
+        port: parseInt(configService.get<string>('DB_PORT'), 10),
+        username: configService.get<string>('DB_USERNAME'),
+        password: configService.get<string>('DB_PASSWORD'),
+        database: configService.get<string>('DB_NAME'),
         entities: [join(__dirname, '**', '*.entity.{ts,js}')],
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
         migrations: [join(__dirname, 'database', 'migrations', '*.{ts,js}')],

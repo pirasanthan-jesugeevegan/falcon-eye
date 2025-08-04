@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "sst dev",
     "deploy:sst": "sst deploy",
-    "remove:sst": "sst remove"
+    "remove:sst": "sst remove",
+    "remove:all": "./remove-all.sh"
   },
   "devDependencies": {
     "sst": "^3.17.10"
