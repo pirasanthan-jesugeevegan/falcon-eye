@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { dateFormat } from '@/lib/utils';
 
 interface E2ETestResultsProps {
   e2eTestResults: E2ETestResult[];
@@ -41,15 +42,7 @@ export default function E2ETestResults({
       cell: ({ row }) => (
         <div className="flex items-center text-xs text-muted-foreground">
           <Calendar className="mr-1 h-3 w-3" />
-          {new Date(row.getValue('timestamp')).toLocaleString('en-US', {
-            weekday: 'short',
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-          })}
+          {dateFormat(row.getValue('timestamp'))}
         </div>
       ),
     },
@@ -226,18 +219,7 @@ export default function E2ETestResults({
                   </Badge>
                 </div>
                 <div className="mt-2 text-xs text-muted-foreground">
-                  {new Date(e2eTestResults[0].timestamp).toLocaleString(
-                    'en-US',
-                    {
-                      weekday: 'short',
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                    },
-                  )}
+                  {dateFormat(e2eTestResults[0].timestamp)}
                 </div>
               </div>
             ) : (

@@ -94,7 +94,27 @@ else
     echo "No Lambda functions found"
 fi
 
-echo "📋 Step 5: Cleaning up VPCs..."
+echo "📋 Step 5: Cleaning up NAT Gateways..."
+NAT_GATEWAYS=$(aws ec2 describe-nat-gateways \
+    --query "NatGateways[?State!='deleted'].NatGatewayId" \
+    --output text 2>/dev/null || echo "")
+
+if [ ! -z "$NAT_GATEWAYS" ]; then
+    echo "Found NAT Gateways: $NAT_GATEWAYS"
+    for nat in $NAT_GATEWAYS; do
+        echo "Deleting NAT Gateway: $nat"
+        aws ec2 delete-nat-gateway --nat-gateway-id "$nat" || true
+    done
+    
+    echo "Waiting for NAT Gateways to be deleted..."
+    for nat in $NAT_GATEWAYS; do
+        aws ec2 wait nat-gateway-deleted --nat-gateway-ids "$nat" || true
+    done
+else
+    echo "No NAT Gateways found"
+fi
+
+echo "📋 Step 6: Cleaning up VPCs..."
 VPC_IDS=$(aws ec2 describe-vpcs \
     --filters "Name=tag:Name,Values=*${STACK_NAME}*" \
     --query 'Vpcs[].VpcId' \
@@ -111,7 +131,7 @@ else
     echo "No VPCs found"
 fi
 
-echo "📋 Step 6: Cleaning up CloudWatch log groups..."
+echo "📋 Step 7: Cleaning up CloudWatch log groups..."
 LOG_GROUPS=$(aws logs describe-log-groups \
     --no-cli-pager \
     --query "logGroups[?contains(logGroupName, '${STACK_NAME}-${STAGE}') || contains(logGroupName, '${STAGE}')].logGroupName" \
@@ -127,7 +147,7 @@ else
     echo "No log groups found"
 fi
 
-echo "📋 Step 7: Cleaning up IAM roles..."
+echo "📋 Step 8: Cleaning up IAM roles..."
 IAM_ROLES=$(aws iam list-roles \
     --no-cli-pager \
     --query "Roles[?contains(RoleName, '${STACK_NAME}-${STAGE}') || contains(RoleName, '${STAGE}')].RoleName" \
@@ -145,7 +165,7 @@ else
     echo "No IAM roles found"
 fi
 
-echo "📋 Step 8: Attempting CloudFormation stack deletion..."
+echo "📋 Step 9: Attempting CloudFormation stack deletion..."
 if aws cloudformation describe-stacks --stack-name "$FULL_STACK_NAME" >/dev/null 2>&1; then
     echo "Deleting CloudFormation stack: $FULL_STACK_NAME"
     aws cloudformation delete-stack --stack-name "$FULL_STACK_NAME" || true
@@ -155,7 +175,7 @@ else
     echo "No CloudFormation stack found"
 fi
 
-echo "📋 Step 9: Final SST remove attempt..."
+echo "📋 Step 10: Final SST remove attempt..."
 if sst remove --stage "$STAGE"; then
     echo "✅ Final SST remove successful!"
 else

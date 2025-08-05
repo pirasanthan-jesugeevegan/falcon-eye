@@ -66,9 +66,8 @@ export function Sidebar() {
       {/* Mobile menu button */}
       {isMobile && (
         <Button
-          variant="ghost"
           size="icon"
-          className="fixed top-4 left-4 z-50 md:hidden"
+          className="fixed top-6 left-4 z-50 md:hidden"
           onClick={toggleSidebar}
         >
           {isOpen ? <X /> : <AlignJustify />}
@@ -130,11 +129,13 @@ export function Sidebar() {
                     <SidebarSection
                       title="Jira"
                       description="List of Jira queries"
-                      items={jira.map(query => ({
-                        id: query.id!.toString(),
-                        name: query.name,
-                        isActive: query.isActive,
-                      }))}
+                      items={jira
+                        .filter(query => query.isActive)
+                        .map(query => ({
+                          id: query.id!.toString(),
+                          name: query.name,
+                          isActive: query.isActive,
+                        }))}
                       basePath="/jira"
                       showActiveOnly={true}
                     />

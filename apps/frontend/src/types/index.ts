@@ -3,8 +3,8 @@ export interface Product {
   productName: string;
   icon?: string;
   path?: string;
-  created_at?: string;
-  updated_at?: string;
+  createdAt?: string;
+  updatedAt?: string;
   isActive?: boolean;
   jiraResults?: JiraResult[];
   unitTestResults?: UnitTestResult[];

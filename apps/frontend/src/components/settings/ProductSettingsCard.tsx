@@ -34,6 +34,7 @@ export function ProductSettingsCard() {
               trigger={
                 <Button>
                   <Plus />
+                  Add Product / Service
                 </Button>
               }
               isOpen={isProductModalOpen}
