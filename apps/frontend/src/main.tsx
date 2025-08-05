@@ -14,7 +14,7 @@ const router = createRouter({
     queryClient,
   },
 });
-console.log(import.meta.env.VITE_API_BASE_URL);
+
 // Register the router instance for type safety
 declare module '@tanstack/react-router' {
   interface Register {
