@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { queryKeys, getInvalidationKeys } from '@/lib/query-keys';
+import { queryKeys } from '@/lib/query-keys';
 import { apiClient, handleApiError } from '@/lib/api-client';
 import type { Product } from '@/types';
 import { toast } from 'sonner';
@@ -10,11 +10,11 @@ const productsApi = {
 
   getById: (id: string): Promise<Product> => apiClient.get(`/products/${id}`),
 
-  create: (product: Product): Promise<{ product: Product }> =>
+  create: (product: Product): Promise<Product> =>
     apiClient.post('/products', product),
 
   update: (id: string, product: Partial<Product>): Promise<Product> =>
-    apiClient.put(`/products/${id}`, product),
+    apiClient.patch(`/products/${id}`, product),
 
   delete: (id: string): Promise<void> => apiClient.delete(`/products/${id}`),
 };
@@ -44,7 +44,7 @@ export const useCreateProduct = () => {
     onSuccess: () => {
       // Invalidate and refetch products list
       queryClient.invalidateQueries({
-        queryKey: getInvalidationKeys.products(),
+        queryKey: queryKeys.products.lists(),
       });
       toast.success('Product created successfully');
     },
@@ -63,7 +63,7 @@ export const useUpdateProduct = () => {
       queryClient.setQueryData(queryKeys.products.detail(variables.id), data);
       // Invalidate products list
       queryClient.invalidateQueries({
-        queryKey: getInvalidationKeys.products(),
+        queryKey: queryKeys.products.lists(),
       });
       toast.success('Product updated successfully');
     },
@@ -78,7 +78,7 @@ export const useDeleteProduct = () => {
     mutationFn: productsApi.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: getInvalidationKeys.products(),
+        queryKey: queryKeys.products.lists(),
       });
       toast.success('Product deleted successfully');
     },
