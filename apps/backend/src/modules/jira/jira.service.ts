@@ -5,13 +5,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import axios from 'axios';
 import { JiraConfig } from './entities/jira-config.entity';
 import { JiraQuery } from './entities/jira-query.entity';
 import { CreateJiraConfigDto } from './dto/create-jira-config.dto';
 import { UpdateJiraConfigDto } from './dto/update-jira-config.dto';
 import { CreateJiraQueryDto } from './dto/create-jira-query.dto';
 import { UpdateJiraQueryDto } from './dto/update-jira-query.dto';
-import { ProxyService } from '../proxy/proxy.service';
 
 @Injectable()
 export class JiraService {
@@ -20,7 +20,6 @@ export class JiraService {
     private jiraConfigRepository: Repository<JiraConfig>,
     @InjectRepository(JiraQuery)
     private jiraQueryRepository: Repository<JiraQuery>,
-    private proxyService: ProxyService,
   ) {}
 
   // Jira Configuration Methods
@@ -193,15 +192,12 @@ export class JiraService {
     apiToken: string,
   ): Promise<boolean> {
     try {
-      const response = await this.proxyService.get(
-        `${baseUrl}/rest/api/3/myself`,
-        {
-          auth: {
-            username: email,
-            password: apiToken,
-          },
+      const response = await axios.get(`${baseUrl}/rest/api/3/myself`, {
+        auth: {
+          username: email,
+          password: apiToken,
         },
-      );
+      });
 
       if (response.status === 200) {
         return true;
@@ -221,7 +217,7 @@ export class JiraService {
     jqlQuery: string,
   ): Promise<boolean> {
     try {
-      const response = await this.proxyService.post(
+      const response = await axios.post(
         `${baseUrl}/rest/api/3/search`,
         {
           jql: jqlQuery,
@@ -255,7 +251,7 @@ export class JiraService {
     startAt = 0,
   ): Promise<any> {
     try {
-      const response = await this.proxyService.post(
+      const response = await axios.post(
         `${baseUrl}/rest/api/3/search`,
         {
           jql: jqlQuery,

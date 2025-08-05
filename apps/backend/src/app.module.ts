@@ -7,7 +7,6 @@ import { UnitResultsModule } from './modules/unit-results/unit-results.module';
 import { JiraModule } from './modules/jira/jira.module';
 import { join } from 'path';
 import { SonarCloudModule } from './modules/sonarcloud/sonarcloud.module';
-import { ProxyModule } from './modules/proxy/proxy.module';
 import { Product } from './modules/products/entities/product.entity';
 import { E2EResult } from './modules/e2e-results/entities/e2e-result.entity';
 import { UnitResult } from './modules/unit-results/entities/unit-result.entity';
@@ -54,7 +53,6 @@ import { SonarCloudQuery } from './modules/sonarcloud/entities/sonarcloud-query.
     UnitResultsModule,
     JiraModule,
     SonarCloudModule,
-    ProxyModule,
   ],
 })
 export class AppModule {}
