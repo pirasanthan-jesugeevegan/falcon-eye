@@ -130,11 +130,13 @@ export function Sidebar() {
                     <SidebarSection
                       title="Jira"
                       description="List of Jira queries"
-                      items={jira.map(query => ({
-                        id: query.id!.toString(),
-                        name: query.name,
-                        isActive: query.isActive,
-                      }))}
+                      items={jira
+                        .filter(query => query.isActive)
+                        .map(query => ({
+                          id: query.id!.toString(),
+                          name: query.name,
+                          isActive: query.isActive,
+                        }))}
                       basePath="/jira"
                       showActiveOnly={true}
                     />
