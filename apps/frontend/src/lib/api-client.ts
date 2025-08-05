@@ -2,7 +2,7 @@ import { toast } from 'sonner';
 
 // Base URL for API calls
 const API_BASE_URL =
-  process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:3000/api';
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 export interface ApiError extends Error {
   status?: number;
@@ -95,7 +95,7 @@ class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient(API_BASE_URL);
+export const apiClient = new ApiClient(API_BASE_URL + '/api');
 
 // Global error handler for API calls
 export const handleApiError = (error: unknown) => {
