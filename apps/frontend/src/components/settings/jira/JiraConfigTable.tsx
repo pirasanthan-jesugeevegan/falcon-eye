@@ -40,7 +40,7 @@ export function JiraConfigTable({
     undefined,
   );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleting] = useState(false);
   const deleteConfig = useDeleteJiraConfig();
   // Handle edit button click
   const handleEditClick = (config: JiraConfig) => {

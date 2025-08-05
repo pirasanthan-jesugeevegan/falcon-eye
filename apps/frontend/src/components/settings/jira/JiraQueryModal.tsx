@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
-
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -28,10 +27,9 @@ import {
 import {
   useCreateJiraQuery,
   useJiraConfig,
-  useUpdateJiraQuery,
   usePatchJiraQuery,
   type JiraQuery,
-} from '@/hooks/api/use-jira';
+} from '@/hooks/api';
 import {
   Select,
   SelectTrigger,
@@ -39,12 +37,14 @@ import {
   SelectItem,
   SelectGroup,
 } from '@/components/ui/select';
+import type { JiraConfig } from '@/types';
 
 const jiraQuerySchema = z.object({
   name: z.string().min(1, { message: 'Query name is required.' }),
   jqlQuery: z.string().min(1, { message: 'JQL query is required.' }),
   description: z.string().optional(),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
+  jiraConfigId: z.string().optional(),
 });
 
 type JiraQueryFormValues = z.infer<typeof jiraQuerySchema>;
@@ -65,18 +65,22 @@ export function JiraQueryModal({
   mode = 'create',
 }: JiraQueryModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { data: jiraConfig = [], isLoading: isJiraLoading } = useJiraConfig();
+  const { data: jiraConfig } = useJiraConfig();
+  const jiraConfigs = Array.isArray(jiraConfig)
+    ? jiraConfig
+    : jiraConfig
+      ? [jiraConfig]
+      : [];
   const createQuery = useCreateJiraQuery();
-  const updateQuery = useUpdateJiraQuery();
   const patchQuery = usePatchJiraQuery();
 
   const queryForm = useForm<JiraQueryFormValues>({
     resolver: zodResolver(jiraQuerySchema),
     defaultValues: {
-      name: '',
-      jqlQuery: '',
-      description: '',
-      isActive: true,
+      name: editData?.name || '',
+      jqlQuery: editData?.jqlQuery || '',
+      description: editData?.description || '',
+      isActive: editData?.isActive || true,
     },
   });
 
@@ -84,6 +88,7 @@ export function JiraQueryModal({
   useEffect(() => {
     if (editData && mode === 'edit') {
       queryForm.reset({
+        jiraConfigId: editData.jiraConfigId || '',
         name: editData.name,
         jqlQuery: editData.jqlQuery,
         description: editData.description || '',
@@ -100,7 +105,7 @@ export function JiraQueryModal({
         // Create new query
         await createQuery.mutateAsync({
           name: values.name,
-          jiraConfigId: jiraConfig[0]?.id || '', // Use first config or handle no config case
+          jiraConfigId: values.jiraConfigId || '',
           jqlQuery: values.jqlQuery,
           description: values.description ?? '',
           isActive: values.isActive,
@@ -137,14 +142,13 @@ export function JiraQueryModal({
       onOpenChange(false);
       if (mode === 'create') {
         queryForm.reset({
-          jiraConfigId: '',
           name: '',
           jqlQuery: '',
           description: '',
           isActive: true,
         });
       }
-    } catch (error) {
+    } catch {
       // Error is already handled in mutation
     } finally {
       setIsSubmitting(false);
@@ -178,22 +182,23 @@ export function JiraQueryModal({
                   <FormLabel>Select Jira Config</FormLabel>
                   <FormControl>
                     <Select
-                      onValueChange={value => field.onChange(value === 'true')}
+                      value={field.value}
+                      onValueChange={value => field.onChange(value)}
                     >
                       <SelectTrigger>
                         <span>
-                          {jiraConfig[0]?.instanceName || 'No Jira Config'}
+                          {jiraConfigs.find(
+                            (c: JiraConfig) => c.id === field.value,
+                          )?.instanceName ?? 'No Jira Config'}
                         </span>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          {(Array.isArray(jiraConfig) ? jiraConfig : []).map(
-                            config => (
-                              <SelectItem key={config.id} value={config.id}>
-                                {config.instanceName}
-                              </SelectItem>
-                            ),
-                          )}
+                          {jiraConfigs.map(config => (
+                            <SelectItem key={config.id} value={config.id}>
+                              {config.instanceName}
+                            </SelectItem>
+                          ))}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
