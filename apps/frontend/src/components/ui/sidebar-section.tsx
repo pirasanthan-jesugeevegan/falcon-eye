@@ -41,6 +41,7 @@ export const SidebarSection = ({
           key={item.id}
           to={(basePath + '/' + item.id) as RoutePath}
           className="flex items-center px-3 py-2 rounded-md text-sm transition-colors hover:bg-primary/20 hover:text-primary"
+          style={{ margin: 'inherit' }}
           activeProps={{
             className: 'bg-primary/20 text-primary',
           }}

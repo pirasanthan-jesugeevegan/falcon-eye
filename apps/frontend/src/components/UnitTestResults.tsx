@@ -16,6 +16,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import type { UnitTestResult, CommitTestResult } from '@/types';
 import { Clock, GitCommit, GitPullRequest, User } from 'lucide-react';
 import { Progress } from './ui/progress';
+import { dateFormat } from '@/lib/utils';
 
 interface UnitTestResultsProps {
   unitTestResults: UnitTestResult[];
@@ -32,15 +33,7 @@ export default function UnitTestResults({
       cell: ({ row }) => (
         <div className="flex items-center">
           <span className="font-mono text-xs">
-            {new Date(row.getValue('date')).toLocaleString('en-US', {
-              weekday: 'short',
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-            })}
+            {dateFormat(row.getValue('date'))}
           </span>
         </div>
       ),
@@ -215,9 +208,7 @@ export default function UnitTestResults({
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 mr-2" />
                     <span className="font-semibold">
-                      {new Date(
-                        unitTestResults[0]?.result[0].date,
-                      ).toLocaleString()}
+                      {dateFormat(unitTestResults[0]?.result[0].date)}
                     </span>
                   </div>
                 </div>

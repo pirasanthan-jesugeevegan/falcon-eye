@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/card';
 import { CheckCircle, XCircle, GitPullRequest } from 'lucide-react';
 import type { Product } from '@/types';
+import { dateFormat } from '@/lib/utils';
 
 interface ProductOverviewProps {
   product: Product;
@@ -146,13 +147,13 @@ export default function ProductOverview({
               <div className="grid grid-cols-2 gap-1 text-sm">
                 <div className="text-muted-foreground">Created At</div>
                 <div className="font-medium">
-                  {new Date(product.created_at!).toLocaleDateString()}
+                  {dateFormat(product.createdAt!)}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-1 text-sm">
                 <div className="text-muted-foreground">Updated At</div>
                 <div className="font-medium">
-                  {new Date(product.updated_at!).toLocaleDateString()}
+                  {dateFormat(product.updatedAt!)}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-1 text-sm">
@@ -182,9 +183,7 @@ export default function ProductOverview({
                         {product.unitTestResults[0].pull_request}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {new Date(
-                          product.unitTestResults[0].result[0].date,
-                        ).toLocaleString()}
+                        {dateFormat(product.unitTestResults[0].result[0].date)}
                       </p>
                     </div>
                   </div>
@@ -210,9 +209,7 @@ export default function ProductOverview({
                       {product.e2eTestResults[0].name}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(
-                        product.e2eTestResults[0].timestamp,
-                      ).toLocaleString()}
+                      {dateFormat(product.e2eTestResults[0].timestamp)}
                     </p>
                   </div>
                 </div>
