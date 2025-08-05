@@ -2,11 +2,14 @@ import { Link } from '@tanstack/react-router';
 import { Dot } from 'lucide-react';
 import type { FileRoutesByFullPath } from '../../routeTree.gen';
 import { Separator } from '@/components/ui/separator';
+import DynamicHeroIcon from '@/components/ui/dynamicIcon';
+import * as HIcons from '@heroicons/react/24/solid';
 
 interface SidebarItem {
   id: string;
   name: string;
   isActive?: boolean;
+  icon?: string;
 }
 
 interface SidebarSectionProps {
@@ -24,14 +27,7 @@ export const SidebarSection = ({
   description,
   items,
   basePath,
-  showActiveOnly = false,
 }: SidebarSectionProps) => {
-  const filteredItems = showActiveOnly
-    ? items.filter(item => item.isActive !== false)
-    : items;
-
-  if (filteredItems.length === 0) return null;
-
   return (
     <div className="pt-2">
       <Separator className="my-2" />
@@ -40,7 +36,7 @@ export const SidebarSection = ({
         {description}
       </div>
 
-      {filteredItems.map(item => (
+      {items.map(item => (
         <Link
           key={item.id}
           to={(basePath + '/' + item.id) as RoutePath}
@@ -49,7 +45,14 @@ export const SidebarSection = ({
             className: 'bg-primary/20 text-primary',
           }}
         >
-          <Dot />
+          {item.icon ? (
+            <DynamicHeroIcon
+              icon={item.icon as keyof typeof HIcons}
+              className="mr-2 h-6 w-6"
+            />
+          ) : (
+            <Dot />
+          )}
           {item.name}
         </Link>
       ))}

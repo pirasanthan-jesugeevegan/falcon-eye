@@ -113,10 +113,13 @@ export function Sidebar() {
                   <SidebarSection
                     title="Products / Services"
                     description="List of products / services"
-                    items={products.map(product => ({
-                      id: product.id!.toString(),
-                      name: product.productName,
-                    }))}
+                    items={products
+                      .filter(product => product.isActive === true)
+                      .map(product => ({
+                        id: product.id!.toString(),
+                        name: product.productName,
+                        icon: product.icon,
+                      }))}
                     basePath="/products"
                   />
                 )}
