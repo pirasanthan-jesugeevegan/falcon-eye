@@ -27,6 +27,7 @@ export default [
       '**/*.js',
       '**/*.mjs',
       '**/*.cjs',
+      '**/.sst',
     ],
   },
 
