@@ -114,7 +114,7 @@ export function Sidebar() {
                     title="Products / Services"
                     description="List of products / services"
                     items={products.map(product => ({
-                      id: product.id.toString(),
+                      id: product.id!.toString(),
                       name: product.productName,
                     }))}
                     basePath="/products"
@@ -128,7 +128,7 @@ export function Sidebar() {
                       title="Jira"
                       description="List of Jira queries"
                       items={jira.map(query => ({
-                        id: query.id.toString(),
+                        id: query.id!.toString(),
                         name: query.name,
                         isActive: query.isActive,
                       }))}
@@ -144,7 +144,7 @@ export function Sidebar() {
                       title="SonarCloud"
                       description="List of SonarCloud queries"
                       items={sonarCloud.map(query => ({
-                        id: query.id.toString(),
+                        id: query.id!.toString(),
                         name: query.name,
                         isActive: query.isActive,
                       }))}

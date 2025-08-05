@@ -219,7 +219,7 @@ export const useAllSonarCloudIssues = () => {
         queries.map(async query => {
           const result = await sonarCloudApi.getExecuteQuery(query.id!);
           return {
-            issues: result.issues,
+            issues: result.pull_request,
             queryName: query.name,
           };
         }),
