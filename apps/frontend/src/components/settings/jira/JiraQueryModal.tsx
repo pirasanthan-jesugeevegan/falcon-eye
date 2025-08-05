@@ -195,7 +195,7 @@ export function JiraQueryModal({
                       <SelectContent>
                         <SelectGroup>
                           {jiraConfigs.map(config => (
-                            <SelectItem key={config.id} value={config.id}>
+                            <SelectItem key={config.id} value={config.id || ''}>
                               {config.instanceName}
                             </SelectItem>
                           ))}
