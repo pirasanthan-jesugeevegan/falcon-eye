@@ -5,36 +5,17 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlignJustify, LayoutDashboard, X } from 'lucide-react';
 import { SidebarSection } from '@/components/ui/sidebar-section';
+import { useJiraQueries, useProducts, useSonarCloudQueries } from '@/hooks/api';
 
 export function Sidebar() {
   const [isMobile, setIsMobile] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { data: products = [], isLoading } = useProducts();
+  const { data: jira = [], isLoading: isJiraLoading } = useJiraQueries();
+  const { data: sonarCloud = [], isLoading: isSonarCloudLoading } =
+    useSonarCloudQueries();
 
-  const products = [
-    {
-      id: 1,
-      productName: 'Product 1',
-      icon: '🚀',
-    },
-  ];
-  const jira = [
-    {
-      id: 1,
-      name: 'Jira 1',
-      icon: '🚀',
-      isActive: true,
-    },
-  ];
-
-  const sonarCloud = [
-    {
-      id: 1,
-      name: 'SonarCloud 1',
-      icon: '🚀',
-      isActive: true,
-    },
-  ];
   useEffect(() => {
     // Check if mobile
     const checkIfMobile = () => {
@@ -109,66 +90,71 @@ export function Sidebar() {
       >
         <div className="px-4 py-6">
           <h1 className="text-2xl font-bold mb-6 px-3">Falcon Eye</h1>
-
-          <ScrollArea className="h-[calc(100vh-140px)]">
-            <div className="space-y-1">
-              <Link
-                to="/"
-                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors hover:bg-primary/20 hover:text-primary"
-                activeProps={{
-                  className: 'bg-primary/20 text-primary',
-                }}
-              >
-                <LayoutDashboard />
-                Dashboard
-              </Link>
-
-              {/* Products */}
-              {products.length > 0 && (
-                <SidebarSection
-                  title="Products / Services"
-                  description="List of products / services"
-                  items={products.map(product => ({
-                    id: product.id.toString(),
-                    name: product.productName,
-                  }))}
-                  basePath="/products"
-                />
-              )}
-
-              {/* Jira Queries */}
-              {jira.length > 0 &&
-                jira.filter(query => query.isActive).length > 0 && (
-                  <SidebarSection
-                    title="Jira"
-                    description="List of Jira queries"
-                    items={jira.map(query => ({
-                      id: query.id.toString(),
-                      name: query.name,
-                      isActive: query.isActive,
-                    }))}
-                    basePath="/jira"
-                    showActiveOnly={true}
-                  />
-                )}
-
-              {/* SonarCloud Queries */}
-              {sonarCloud.length > 0 &&
-                sonarCloud.filter(query => query.isActive).length > 0 && (
-                  <SidebarSection
-                    title="SonarCloud"
-                    description="List of SonarCloud queries"
-                    items={sonarCloud.map(query => ({
-                      id: query.id.toString(),
-                      name: query.name,
-                      isActive: query.isActive,
-                    }))}
-                    basePath="/sonarcloud"
-                    showActiveOnly={true}
-                  />
-                )}
+          {isLoading || isJiraLoading || isSonarCloudLoading ? (
+            <div className="flex items-center justify-center h-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
-          </ScrollArea>
+          ) : (
+            <ScrollArea className="h-[calc(100vh-140px)]">
+              <div className="space-y-1">
+                <Link
+                  to="/"
+                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors hover:bg-primary/20 hover:text-primary"
+                  activeProps={{
+                    className: 'bg-primary/20 text-primary',
+                  }}
+                >
+                  <LayoutDashboard />
+                  Dashboard
+                </Link>
+
+                {/* Products */}
+                {products.length > 0 && (
+                  <SidebarSection
+                    title="Products / Services"
+                    description="List of products / services"
+                    items={products.map(product => ({
+                      id: product.id!.toString(),
+                      name: product.productName,
+                    }))}
+                    basePath="/products"
+                  />
+                )}
+
+                {/* Jira Queries */}
+                {jira.length > 0 &&
+                  jira.filter(query => query.isActive).length > 0 && (
+                    <SidebarSection
+                      title="Jira"
+                      description="List of Jira queries"
+                      items={jira.map(query => ({
+                        id: query.id!.toString(),
+                        name: query.name,
+                        isActive: query.isActive,
+                      }))}
+                      basePath="/jira"
+                      showActiveOnly={true}
+                    />
+                  )}
+
+                {/* SonarCloud Queries */}
+                {sonarCloud.length > 0 &&
+                  sonarCloud.filter(query => query.isActive).length > 0 && (
+                    <SidebarSection
+                      title="SonarCloud"
+                      description="List of SonarCloud queries"
+                      items={sonarCloud.map(query => ({
+                        id: query.id!.toString(),
+                        name: query.name,
+                        isActive: query.isActive,
+                      }))}
+                      basePath="/sonarcloud"
+                      showActiveOnly={true}
+                    />
+                  )}
+              </div>
+            </ScrollArea>
+          )}
         </div>
       </div>
     </>
