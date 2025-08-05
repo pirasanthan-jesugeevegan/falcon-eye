@@ -66,9 +66,8 @@ export function Sidebar() {
       {/* Mobile menu button */}
       {isMobile && (
         <Button
-          variant="ghost"
           size="icon"
-          className="fixed top-4 left-4 z-50 md:hidden"
+          className="fixed top-6 left-4 z-50 md:hidden"
           onClick={toggleSidebar}
         >
           {isOpen ? <X /> : <AlignJustify />}

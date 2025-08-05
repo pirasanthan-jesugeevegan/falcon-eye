@@ -21,7 +21,7 @@ export function JiraIntegrationCard() {
   const [isQueryModalOpen, setIsQueryModalOpen] = useState(false);
 
   // Fetch existing Jira configurations using the new hook
-  const { data: jiraConfigs = [], isLoading: isConfigLoading } =
+  const { data: jiraConfigs = [] as JiraConfig[], isLoading: isConfigLoading } =
     useJiraConfig();
 
   // Fetch Jira queries - use the hook if backend is ready, otherwise use mock data
@@ -62,28 +62,30 @@ export function JiraIntegrationCard() {
         </div>
 
         {/* JIRA Queries Section */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="font-medium text-lg">JIRA Queries</h3>
-            <JiraQueryModal
-              trigger={
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add New Query
-                </Button>
-              }
-              isOpen={isQueryModalOpen}
-              onOpenChange={setIsQueryModalOpen}
+        {Array.isArray(jiraConfigs) && jiraConfigs.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="font-medium text-lg">JIRA Queries</h3>
+              <JiraQueryModal
+                trigger={
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add New Query
+                  </Button>
+                }
+                isOpen={isQueryModalOpen}
+                onOpenChange={setIsQueryModalOpen}
+              />
+            </div>
+
+            <JiraQueryTable
+              queries={fetchedQueries}
+              isLoading={isQueryLoading}
+              isQueryModalOpen={isQueryModalOpen}
+              onQueryModalOpenChange={setIsQueryModalOpen}
             />
           </div>
-
-          <JiraQueryTable
-            queries={fetchedQueries}
-            isLoading={isQueryLoading}
-            isQueryModalOpen={isQueryModalOpen}
-            onQueryModalOpenChange={setIsQueryModalOpen}
-          />
-        </div>
+        )}
       </CardContent>
     </Card>
   );

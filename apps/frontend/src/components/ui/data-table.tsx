@@ -54,7 +54,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div>
+    <div className="w-full">
       {filterColumn && (
         <div className="flex items-center py-4">
           <Input
@@ -69,14 +69,17 @@ export function DataTable<TData, TValue>({
           />
         </div>
       )}
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto w-full">
+        <Table className="min-w-full table-fixed">
           <TableHeader>
             {table.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map(header => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead
+                      key={header.id}
+                      className="whitespace-nowrap text-xs sm:text-sm"
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -97,7 +100,10 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && 'selected'}
                 >
                   {row.getVisibleCells().map(cell => (
-                    <TableCell key={cell.id}>
+                    <TableCell
+                      key={cell.id}
+                      className="whitespace-normal text-xs sm:text-sm"
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext(),
@@ -119,12 +125,13 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
+      <div className="flex items-center justify-center sm:justify-end space-x-2 py-4">
         <Button
           variant="outline"
           size="sm"
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
+          className="text-xs sm:text-sm"
         >
           Previous
         </Button>
@@ -133,6 +140,7 @@ export function DataTable<TData, TValue>({
           size="sm"
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
+          className="text-xs sm:text-sm"
         >
           Next
         </Button>

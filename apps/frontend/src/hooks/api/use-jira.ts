@@ -16,7 +16,7 @@ export interface JiraQuery {
 
 // API functions
 export const jiraApi = {
-  getConfig: (): Promise<JiraConfig> => apiClient.get('/jira/config/'),
+  getConfig: (): Promise<JiraConfig[]> => apiClient.get('/jira/config/'),
 
   updateConfig: (config: JiraConfig): Promise<JiraConfig> =>
     apiClient.post('/jira/config/', config),
@@ -64,8 +64,8 @@ export const useUpdateJiraConfig = () => {
   return useMutation({
     mutationFn: jiraApi.updateConfig,
     onSuccess: data => {
-      // Update the config in cache
-      queryClient.setQueryData(queryKeys.jira.config(), data);
+      // Update the config in cache - wrap in array since backend returns array
+      queryClient.setQueryData(queryKeys.jira.config(), [data]);
       toast.success('Jira configuration updated successfully');
     },
     onError: handleApiError,
@@ -79,8 +79,8 @@ export const usePatchJiraConfig = () => {
     mutationFn: ({ id, query }: { id: string; query: Partial<JiraConfig> }) =>
       jiraApi.patchConfig(id, query),
     onSuccess: data => {
-      // Update the config in cache
-      queryClient.setQueryData(queryKeys.jira.config(), data);
+      // Update the config in cache - wrap in array since backend returns array
+      queryClient.setQueryData(queryKeys.jira.config(), [data]);
       toast.success('Jira configuration updated successfully');
     },
     onError: handleApiError,

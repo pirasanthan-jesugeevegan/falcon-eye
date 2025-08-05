@@ -65,7 +65,7 @@ export function ProductsPage() {
   const e2eStats = calculateE2EStats(e2eResults.data);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto md:p-6 space-y-6">
       <div className="bg-purple-700 text-white p-4">
         <div className="flex items-center mb-2">
           {product.icon && (

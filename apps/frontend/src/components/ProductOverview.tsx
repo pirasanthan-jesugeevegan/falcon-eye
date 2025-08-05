@@ -200,7 +200,7 @@ export default function ProductOverview({
                   </div>
                   <div>
                     <p className="text-sm font-medium">
-                      E2E Test{' '}
+                      E2E Test
                       {product.e2eTestResults[0].status === 'passed'
                         ? 'Passed'
                         : 'Failed'}

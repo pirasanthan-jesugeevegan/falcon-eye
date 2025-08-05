@@ -15,7 +15,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       {/* Content */}
       <div className="flex flex-col flex-1">
         <Header />
-        <main className="flex-1 p-5 bg-slate-500/10 rounded-t-[12px] mr-8">
+        <main className="flex-1 p-5 bg-slate-500/10 rounded-t-[12px] md:mr-8">
           {children}
         </main>
       </div>
