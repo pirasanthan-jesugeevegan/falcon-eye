@@ -63,6 +63,9 @@ export class ProxyService {
       this.configService.get<string>('HTTPS_PROXY') ||
       this.configService.get<string>('PROXY_URL');
 
+    this.logger.log(`Building config for URL: ${config.url}`);
+    this.logger.log(`Proxy URL from env: ${proxyUrl || 'Not set'}`);
+
     const axiosConfig: AxiosRequestConfig = {
       ...config,
       timeout: config.timeout || 30000,
@@ -81,6 +84,7 @@ export class ProxyService {
         try {
           const httpsAgent = new HttpsProxyAgent(proxyUrl);
           axiosConfig.httpsAgent = httpsAgent;
+          this.logger.log('HTTPS proxy agent created successfully');
         } catch (error) {
           this.logger.error('Failed to create HTTPS proxy agent', error);
         }
@@ -91,7 +95,12 @@ export class ProxyService {
           port: parseInt(new URL(proxyUrl).port) || 80,
           protocol: new URL(proxyUrl).protocol.replace(':', ''),
         };
+        this.logger.log(
+          `HTTP proxy configured: ${JSON.stringify(axiosConfig.proxy)}`,
+        );
       }
+    } else {
+      this.logger.log('No proxy configured, using direct connection');
     }
 
     return axiosConfig;

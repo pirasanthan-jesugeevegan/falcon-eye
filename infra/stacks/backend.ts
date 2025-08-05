@@ -42,6 +42,7 @@ export function createBackendStack(db: sst.aws.Postgres, vpc: sst.aws.Vpc) {
         'serverless-http',
         'axios',
         'uuid',
+        'https-proxy-agent',
       ],
     },
   });
