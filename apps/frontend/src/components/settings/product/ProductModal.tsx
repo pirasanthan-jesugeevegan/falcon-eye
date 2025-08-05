@@ -179,7 +179,7 @@ export function ProductModal({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Icon</FormLabel>
-                    <Command className="border rounded-md">
+                    <Command className="border rounded-md bg-background">
                       <CommandInput placeholder="Search icons..." />
                       <CommandList className="max-h-48 overflow-y-auto">
                         {heroIconNames.map(iconName => (
