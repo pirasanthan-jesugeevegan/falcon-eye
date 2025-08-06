@@ -1,9 +1,10 @@
 name: PR Deployment
 
 on:
-  pull_request:
-    # types: [opened, synchronize, reopened, closed]
-    # branches: [master]
+  workflow_run:
+    workflows: ['Continuous Integration']
+    types:
+      - completed
 
 permissions:
   contents: read
@@ -17,9 +18,11 @@ env:
 
 jobs:
   deploy-pr:
-    if: github.event.action != 'closed'
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request'
     runs-on: ubuntu-latest
-    environment: pr-${{ github.event.number }}
+    environment: pr-${{ github.event.workflow_run.pull_requests[0].number }}
 
     steps:
       - name: Checkout code
@@ -45,10 +48,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: pr-${{ github.event.number }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ runner.os }}
+          key: ci-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ runner.os }}
           restore-keys: |
-            pr-${{ github.event.number }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
-            pr-${{ github.event.number }}-
+            ci-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            ci-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -59,18 +62,15 @@ jobs:
           path: |
             **/node_modules
             .pnpm-store
-          key: pr-${{ github.event.number }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ runner.os }}
+          key: ci-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ runner.os }}
 
-      - name: Restore build cache
+      - name: Restore CI build cache
         uses: actions/cache@v4
         with:
           path: |
             apps/frontend/dist
             apps/backend/dist
-          key: pr-${{ github.event.number }}-build-${{ hashFiles('apps/frontend/src/**/*') }}-${{ hashFiles('apps/backend/src/**/*') }}-${{ hashFiles('apps/frontend/package.json') }}-${{ hashFiles('apps/backend/package.json') }}
-
-      - name: Build full stack
-        run: pnpm run build
+          key: build-${{ hashFiles('apps/frontend/src/**/*') }}-${{ hashFiles('apps/frontend/package.json') }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -79,19 +79,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy PR environment
-        run: |
-          cd infra
-          pnpm run deploy:sst --stage pr-${{ github.event.number }}
-        env:
-          AWS_REGION: ${{ env.AWS_REGION }}
-
-      - name: Get PR URLs
-        id: get-pr-urls
+      - name: Deploy PR environment and get URLs
+        id: deploy-and-get-urls
         run: |
           cd infra
           # Deploy and capture output
-          DEPLOY_OUTPUT=$(pnpm run deploy:sst --stage pr-${{ github.event.number }} 2>&1)
+          DEPLOY_OUTPUT=$(pnpm run deploy:sst --stage pr-${{ github.event.workflow_run.pull_requests[0].number }} 2>&1)
           echo "$DEPLOY_OUTPUT"
 
           # Extract backend URL from NestJSAPI resource
@@ -105,6 +98,8 @@ jobs:
           # Debug output
           echo "Extracted Backend URL: $BACKEND_URL"
           echo "Extracted Frontend URL: $FRONTEND_URL"
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
 
       - name: Comment PR URLs
         uses: actions/github-script@v7
@@ -153,13 +148,13 @@ jobs:
               });
             }
         env:
-          BACKEND_URL: ${{ steps.get-pr-urls.outputs.backend_url }}
-          FRONTEND_URL: ${{ steps.get-pr-urls.outputs.frontend_url }}
+          BACKEND_URL: ${{ steps.deploy-and-get-urls.outputs.backend_url }}
+          FRONTEND_URL: ${{ steps.deploy-and-get-urls.outputs.frontend_url }}
 
   destroy-pr:
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
-    environment: pr-${{ github.event.number }}
+    environment: pr-${{ github.event.workflow_run.pull_requests[0].number }}
 
     steps:
       - name: Checkout code
@@ -189,7 +184,7 @@ jobs:
         run: |
           cd infra
           chmod +x remove-all.sh
-          STAGE=pr-${{ github.event.number }} ./remove-all.sh
+          STAGE=pr-${{ github.event.workflow_run.pull_requests[0].number }} ./remove-all.sh
         env:
           AWS_REGION: ${{ env.AWS_REGION }}
         continue-on-error: true

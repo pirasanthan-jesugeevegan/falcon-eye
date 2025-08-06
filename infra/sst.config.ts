@@ -21,13 +21,10 @@ export default $config({
     const { url: backendUrl } = createBackendStack(db, vpc);
     const { url: frontendUrl } = createFrontendStack(backendUrl);
 
+    // Your app's outputs
     return {
-      FrontendSite: {
-        url: frontendUrl,
-      },
-      NestJSAPI: {
-        url: backendUrl,
-      },
+      frontendUrl,
+      backendUrl,
     };
   },
 });
