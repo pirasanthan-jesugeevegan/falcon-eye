@@ -15,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       cache-key: ${{ steps.cache-key.outputs.value }}
-      store-path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -202,7 +201,7 @@ jobs:
       - name: Check for vulnerabilities
         run: |
           pnpm audit --audit-level high || {
-            echo "🚨 High severity vulnerabilities found!"
+            echo "High severity vulnerabilities found!"
             exit 1
           }
-          echo "✅ No high severity vulnerabilities found"
+          echo "No high severity vulnerabilities found"

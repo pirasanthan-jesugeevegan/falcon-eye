@@ -1,10 +1,10 @@
 name: PR Deployment
 
 on:
-  workflow_run:
-    workflows: ['Continuous Integration']
-    types:
-      - completed
+  pull_request:
+    # types: [opened, synchronize, reopened, closed]
+    # branches: [master]
+
 permissions:
   contents: read
   pull-requests: write
@@ -17,16 +17,11 @@ env:
 
 jobs:
   deploy-pr:
-    if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'pull_request'
+    if: github.event.action != 'closed'
     runs-on: ubuntu-latest
-    environment: pr-${{ github.event.workflow_run.pull_requests[0].number }}
+    environment: pr-${{ github.event.number }}
 
     steps:
-      - name: Extract PR Number
-        id: extract_pr
-        run: echo "PR_NUMBER=${{ github.event.workflow_run.pull_requests[0].number }}" >> $GITHUB_OUTPUT
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -42,16 +37,21 @@ jobs:
 
       - name: Get pnpm store directory
         id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
       - name: Setup pnpm cache
         uses: actions/cache@v4
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ci-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ runner.os }}
+          key: pr-${{ github.event.number }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ runner.os }}
           restore-keys: |
-            ci-${{ hashFiles('**/pnpm-lock.yaml') }}-
-            ci-
+            pr-${{ github.event.number }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            pr-${{ github.event.number }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -59,10 +59,7 @@ jobs:
           path: |
             **/node_modules
             .pnpm-store
-          key: ci-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ runner.os }}
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+          key: pr-${{ github.event.number }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ runner.os }}
 
       - name: Restore build cache
         uses: actions/cache@v4
@@ -70,9 +67,10 @@ jobs:
           path: |
             apps/frontend/dist
             apps/backend/dist
-          key: ci-build-${{ hashFiles('apps/frontend/src/**/*') }}-${{ hashFiles('apps/backend/src/**/*') }}-${{ runner.os }}
-          restore-keys: |
-            ci-build-
+          key: pr-${{ github.event.number }}-build-${{ hashFiles('apps/frontend/src/**/*') }}-${{ hashFiles('apps/backend/src/**/*') }}-${{ hashFiles('apps/frontend/package.json') }}-${{ hashFiles('apps/backend/package.json') }}
+
+      - name: Build full stack
+        run: pnpm run build
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -81,17 +79,32 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Deploy and capture URLs
-        id: deploy
+      - name: Deploy PR environment
         run: |
           cd infra
-          pnpm run deploy:sst --stage pr-${{ github.event.number }} --outputs-file sst-outputs.json
+          pnpm run deploy:sst --stage pr-${{ github.event.number }}
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
 
-          BACKEND_URL=$(jq -r '.NestJSAPI.url' sst-outputs.json)
-          FRONTEND_URL=$(jq -r '.FrontendSite.url' sst-outputs.json)
+      - name: Get PR URLs
+        id: get-pr-urls
+        run: |
+          cd infra
+          # Deploy and capture output
+          DEPLOY_OUTPUT=$(pnpm run deploy:sst --stage pr-${{ github.event.number }} 2>&1)
+          echo "$DEPLOY_OUTPUT"
 
+          # Extract backend URL from NestJSAPI resource
+          BACKEND_URL=$(echo "$DEPLOY_OUTPUT" | grep -A 1 "NestJSAPI:" | grep "https://" | head -1 || echo "Backend URL not found")
           echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
+
+          # Extract frontend URL from FrontendSite resource
+          FRONTEND_URL=$(echo "$DEPLOY_OUTPUT" | grep -A 1 "FrontendSite:" | grep "https://" | head -1 || echo "Frontend URL not found")
           echo "frontend_url=$FRONTEND_URL" >> $GITHUB_OUTPUT
+
+          # Debug output
+          echo "Extracted Backend URL: $BACKEND_URL"
+          echo "Extracted Frontend URL: $FRONTEND_URL"
 
       - name: Comment PR URLs
         uses: actions/github-script@v7
@@ -102,24 +115,25 @@ jobs:
 
             let comment = `🚀 **PR Environment Deployed!**\n\n`;
 
-            if (frontendUrl && frontendUrl !== "null") {
+            if (frontendUrl && frontendUrl !== "Frontend URL not found") {
               comment += `**Frontend URL:** ${frontendUrl}\n`;
             }
 
-            if (backendUrl && backendUrl !== "null") {
+            if (backendUrl && backendUrl !== "Backend URL not found") {
               comment += `**Backend API URL:** ${backendUrl}\n`;
             }
 
             comment += `\n**Stage:** \`pr-${context.issue.number}\`\n\nThis environment will be automatically destroyed when the PR is merged or closed.`;
 
+            // Find and update existing comment or create new one
             const comments = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number
             });
 
-            const existingComment = comments.data.find(comment =>
-              comment.user.login === 'github-actions[bot]' &&
+            const existingComment = comments.data.find(comment => 
+              comment.user.login === 'github-actions[bot]' && 
               comment.body.includes('PR Environment Deployed!')
             );
 
@@ -139,8 +153,8 @@ jobs:
               });
             }
         env:
-          BACKEND_URL: ${{ steps.deploy.outputs.backend_url }}
-          FRONTEND_URL: ${{ steps.deploy.outputs.frontend_url }}
+          BACKEND_URL: ${{ steps.get-pr-urls.outputs.backend_url }}
+          FRONTEND_URL: ${{ steps.get-pr-urls.outputs.frontend_url }}
 
   destroy-pr:
     if: github.event.action == 'closed'
@@ -176,6 +190,8 @@ jobs:
           cd infra
           chmod +x remove-all.sh
           STAGE=pr-${{ github.event.number }} ./remove-all.sh
+        env:
+          AWS_REGION: ${{ env.AWS_REGION }}
         continue-on-error: true
 
       - name: Comment destruction
