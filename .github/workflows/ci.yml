@@ -15,64 +15,39 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       cache-key: ${{ steps.cache-key.outputs.value }}
+      store-path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
 
       - name: Generate cache key
         id: cache-key
         run: |
           echo "value=ci-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ runner.os }}" >> $GITHUB_OUTPUT
 
-  install:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
-      - name: Get pnpm store directory
+      - name: Get pnpm store path
         id: pnpm-cache
-        shell: bash
         run: |
           echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
-      - name: Setup pnpm cache
+      - name: Cache pnpm store
         uses: actions/cache@v4
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ needs.setup.outputs.cache-key }}
+          key: ${{ steps.cache-key.outputs.value }}
           restore-keys: |
             ci-${{ hashFiles('**/pnpm-lock.yaml') }}-
             ci-
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/node_modules
-            .pnpm-store
-          key: ${{ needs.setup.outputs.cache-key }}
-
-  lint:
-    needs: [install, setup]
+  install:
+    needs: setup
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -84,23 +59,33 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - name: Restore cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/node_modules
-            .pnpm-store
-          key: ${{ needs.setup.outputs.cache-key }}
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
 
-      - name: Run linting
+  lint:
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Run lint
         run: pnpm run lint
 
   test:
-    needs: [install, setup]
+    needs: install
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -111,26 +96,15 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: ${{ env.PNPM_VERSION }}
-
-      - name: Restore cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/node_modules
-            .pnpm-store
-          key: ${{ needs.setup.outputs.cache-key }}
 
       - name: Run tests
         run: pnpm run backend:test
 
-  build:
-    needs: [install, setup]
+  typecheck:
+    needs: install
     runs-on: ubuntu-latest
-    outputs:
-      build-cache-key: ${{ steps.build-cache.outputs.value }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -142,18 +116,31 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - name: Restore cache
-        uses: actions/cache@v4
+      - name: Run typecheck
+        run: pnpm run typecheck
+
+  build:
+    needs: install
+    runs-on: ubuntu-latest
+    outputs:
+      build-cache-key: ${{ steps.build-cache.outputs.value }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          path: |
-            **/node_modules
-            .pnpm-store
-          key: ${{ needs.setup.outputs.cache-key }}
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
 
       - name: Generate build cache key
         id: build-cache
         run: |
-          echo "value=build-${{ hashFiles('apps/frontend/src/**/*') }}-${{ hashFiles('apps/frontend/package.json') }}" >> $GITHUB_OUTPUT
+          echo "value=build-${{ hashFiles('apps/frontend/src/**/*', 'apps/frontend/package.json', 'pnpm-lock.yaml') }}" >> $GITHUB_OUTPUT
 
       - name: Restore build cache
         uses: actions/cache@v4
@@ -171,11 +158,10 @@ jobs:
           key: ${{ steps.build-cache.outputs.value }}
 
   security:
-    needs: [install, setup]
+    needs: install
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -187,21 +173,10 @@ jobs:
         with:
           version: ${{ env.PNPM_VERSION }}
 
-      - name: Restore cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            **/node_modules
-            .pnpm-store
-          key: ${{ needs.setup.outputs.cache-key }}
-
       - name: Run security audit
-        run: pnpm audit --audit-level moderate
-
-      - name: Check for vulnerabilities
         run: |
           pnpm audit --audit-level high || {
-            echo "High severity vulnerabilities found!"
+            echo "🚨 High severity vulnerabilities found!"
             exit 1
           }
-          echo "No high severity vulnerabilities found"
+          echo "✅ No high severity vulnerabilities found"

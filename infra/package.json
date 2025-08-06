@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "dev": "sst dev",
-    "deploy:sst": "sst deploy",
+    "deploy:sst": "sst deploy --outputs-file sst-outputs.json",
     "remove:sst": "sst remove",
     "remove:all": "./remove-all.sh"
   },

@@ -1,187 +1,158 @@
 #!/bin/bash
 
-# All-in-one script to remove all AWS resources for the SST stack
-# This script handles the RDS dependency issue and removes everything
-
 set -e
-
-# Disable AWS CLI pager to prevent interactive prompts
 export AWS_PAGER=""
 
 STACK_NAME="pj-falcon-eye-stack"
 STAGE="${STAGE:-pirasanthanjesugeevegan}"
 FULL_STACK_NAME="${STACK_NAME}-${STAGE}"
 
-echo "🚀 Starting complete removal of all resources for stack: $FULL_STACK_NAME"
-echo "=================================================="
+echo "🚀 Starting full cleanup for SST stack: $FULL_STACK_NAME"
 
-# Function to check if a command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
+command -v aws >/dev/null || { echo "❌ AWS CLI not installed."; exit 1; }
+command -v sst >/dev/null || { echo "⚠️ SST not found. Installing..."; npm install -g sst; }
 
-# Check if AWS CLI is installed
-if ! command_exists aws; then
-    echo "❌ AWS CLI is not installed. Please install it first."
-    exit 1
-fi
-
-# Check if SST is installed
-if ! command_exists sst; then
-    echo "❌ SST is not installed. Please install it first."
-    npm install -g sst
-    # exit 1
-fi
-
-echo "📋 Step 1: Attempting SST remove first..."
+# Try SST remove first
+echo "📋 Step 1: SST remove"
 if sst remove --stage "$STAGE"; then
-    echo "✅ SST remove successful! All resources cleaned up."
-    exit 0
+  echo "✅ SST removed everything cleanly."
+  exit 0
 fi
 
-echo "⚠️  SST remove failed, proceeding with manual cleanup..."
+echo "⚠️ SST remove failed. Proceeding with manual cleanup..."
 
-echo "📋 Step 2: Cleaning up RDS instances..."
+# RDS
+echo "📋 Step 2: RDS instances"
 RDS_INSTANCES=$(aws rds describe-db-instances \
-    --query "DBInstances[?contains(DBInstanceIdentifier, 'pj-falcon-eye-${STAGE}') || contains(DBInstanceIdentifier, '${STACK_NAME}-${STAGE}')].DBInstanceIdentifier" \
-    --output text 2>/dev/null || echo "")
+  --query "DBInstances[?contains(DBInstanceIdentifier, '${STACK_NAME}-${STAGE}')].DBInstanceIdentifier" --output text)
+for instance in $RDS_INSTANCES; do
+  echo "Deleting RDS: $instance"
+  aws rds delete-db-instance --db-instance-identifier "$instance" --skip-final-snapshot --delete-automated-backups || true
+done
+for instance in $RDS_INSTANCES; do
+  echo "Waiting for RDS to delete: $instance"
+  aws rds wait db-instance-deleted --db-instance-identifier "$instance" || true
+done
 
-if [ ! -z "$RDS_INSTANCES" ]; then
-    echo "Found RDS instances: $RDS_INSTANCES"
-    for instance in $RDS_INSTANCES; do
-        echo "Deleting RDS instance: $instance"
-        aws rds delete-db-instance \
-            --db-instance-identifier "$instance" \
-            --skip-final-snapshot \
-            --delete-automated-backups || true
-    done
-    
-    echo "Waiting for RDS instances to be deleted..."
-    for instance in $RDS_INSTANCES; do
-        aws rds wait db-instance-deleted --db-instance-identifier "$instance" || true
-    done
-else
-    echo "No RDS instances found"
-fi
+# RDS Subnet Groups
+echo "📋 Step 3: RDS subnet groups"
+RDS_SUBNETS=$(aws rds describe-db-subnet-groups \
+  --query "DBSubnetGroups[?contains(DBSubnetGroupName, '${STACK_NAME}-${STAGE}')].DBSubnetGroupName" --output text)
+for group in $RDS_SUBNETS; do
+  aws rds delete-db-subnet-group --db-subnet-group-name "$group" || true
+done
 
-echo "📋 Step 3: Cleaning up RDS subnet groups..."
-SUBNET_GROUPS=$(aws rds describe-db-subnet-groups \
-    --query "DBSubnetGroups[?contains(DBSubnetGroupName, '${STACK_NAME}-${STAGE}')].DBSubnetGroupName" \
-    --output text 2>/dev/null || echo "")
+# Lambda
+echo "📋 Step 4: Lambda functions"
+LAMBDA_FUNCS=$(aws lambda list-functions \
+  --query "Functions[?contains(FunctionName, '${STACK_NAME}-${STAGE}')].FunctionName" --output text)
+for func in $LAMBDA_FUNCS; do
+  aws lambda delete-function --function-name "$func" || true
+done
 
-if [ ! -z "$SUBNET_GROUPS" ]; then
-    echo "Found subnet groups: $SUBNET_GROUPS"
-    for group in $SUBNET_GROUPS; do
-        echo "Deleting subnet group: $group"
-        aws rds delete-db-subnet-group --db-subnet-group-name "$group" || true
-    done
-else
-    echo "No subnet groups found"
-fi
+# NAT Gateways
+echo "📋 Step 5: NAT Gateways"
+NAT_IDS=$(aws ec2 describe-nat-gateways --query "NatGateways[?State!='deleted'].NatGatewayId" --output text)
+for nat in $NAT_IDS; do
+  aws ec2 delete-nat-gateway --nat-gateway-id "$nat" || true
+done
+for nat in $NAT_IDS; do
+  aws ec2 wait nat-gateway-deleted --nat-gateway-ids "$nat" || true
+done
 
-echo "📋 Step 4: Cleaning up Lambda functions..."
-LAMBDA_FUNCTIONS=$(aws lambda list-functions \
-    --query "Functions[?contains(FunctionName, '${STACK_NAME}-${STAGE}') || contains(FunctionName, '${STAGE}')].FunctionName" \
-    --output text 2>/dev/null || echo "")
+# Elastic IPs
+echo "📋 Step 6: Elastic IPs"
+EIP_IDS=$(aws ec2 describe-addresses \
+  --query "Addresses[?Domain=='vpc'].AllocationId" --output text)
+for eip in $EIP_IDS; do
+  aws ec2 release-address --allocation-id "$eip" || true
+done
 
-if [ ! -z "$LAMBDA_FUNCTIONS" ]; then
-    echo "Found Lambda functions: $LAMBDA_FUNCTIONS"
-    for func in $LAMBDA_FUNCTIONS; do
-        echo "Deleting Lambda function: $func"
-        aws lambda delete-function --function-name "$func" || true
-    done
-else
-    echo "No Lambda functions found"
-fi
+# CloudFront
+echo "📋 Step 7: CloudFront distributions"
+DIST_IDS=$(aws cloudfront list-distributions \
+  --query "DistributionList.Items[?contains(Comment, '${STACK_NAME}-${STAGE}')].Id" --output text)
+for dist_id in $DIST_IDS; do
+  etag=$(aws cloudfront get-distribution-config --id "$dist_id" --query ETag --output text)
+  config=$(aws cloudfront get-distribution-config --id "$dist_id" \
+    --query DistributionConfig --output json | jq '.Enabled = false')
+  echo "$config" > tmp-config.json
+  aws cloudfront update-distribution --id "$dist_id" \
+    --distribution-config file://tmp-config.json --if-match "$etag"
+  echo "Waiting for disable propagation..."
+  sleep 60
+  aws cloudfront delete-distribution --id "$dist_id" --if-match "$etag"
+done
+rm -f tmp-config.json
 
-echo "📋 Step 5: Cleaning up NAT Gateways..."
-NAT_GATEWAYS=$(aws ec2 describe-nat-gateways \
-    --query "NatGateways[?State!='deleted'].NatGatewayId" \
-    --output text 2>/dev/null || echo "")
+# S3 Buckets
+echo "📋 Step 8: S3 buckets"
+BUCKETS=$(aws s3api list-buckets \
+  --query "Buckets[?contains(Name, '${STACK_NAME}-${STAGE}')].Name" --output text)
+for bucket in $BUCKETS; do
+  echo "Emptying and deleting bucket: $bucket"
+  aws s3 rm "s3://$bucket" --recursive || true
+  aws s3api delete-bucket --bucket "$bucket" || true
+done
 
-if [ ! -z "$NAT_GATEWAYS" ]; then
-    echo "Found NAT Gateways: $NAT_GATEWAYS"
-    for nat in $NAT_GATEWAYS; do
-        echo "Deleting NAT Gateway: $nat"
-        aws ec2 delete-nat-gateway --nat-gateway-id "$nat" || true
-    done
-    
-    echo "Waiting for NAT Gateways to be deleted..."
-    for nat in $NAT_GATEWAYS; do
-        aws ec2 wait nat-gateway-deleted --nat-gateway-ids "$nat" || true
-    done
-else
-    echo "No NAT Gateways found"
-fi
+# VPCs
+echo "📋 Step 9: VPCs"
+VPCS=$(aws ec2 describe-vpcs \
+  --filters "Name=tag:Name,Values=*${STACK_NAME}*" --query "Vpcs[].VpcId" --output text)
+for vpc in $VPCS; do
+  echo "Cleaning VPC: $vpc"
 
-echo "📋 Step 6: Cleaning up VPCs..."
-VPC_IDS=$(aws ec2 describe-vpcs \
-    --filters "Name=tag:Name,Values=*${STACK_NAME}*" \
-    --query 'Vpcs[].VpcId' \
-    --output text 2>/dev/null || echo "")
+  # Subnets
+  SUBNETS=$(aws ec2 describe-subnets --filters Name=vpc-id,Values="$vpc" --query "Subnets[].SubnetId" --output text)
+  for subnet in $SUBNETS; do aws ec2 delete-subnet --subnet-id "$subnet" || true; done
 
-if [ ! -z "$VPC_IDS" ]; then
-    echo "Found VPCs: $VPC_IDS"
-    for vpc in $VPC_IDS; do
-        echo "Deleting VPC: $vpc"
-        # Delete VPC dependencies first
-        aws ec2 delete-vpc --vpc-id "$vpc" || true
-    done
-else
-    echo "No VPCs found"
-fi
+  # Internet Gateways
+  IGWS=$(aws ec2 describe-internet-gateways \
+    --filters Name=attachment.vpc-id,Values="$vpc" --query "InternetGateways[].InternetGatewayId" --output text)
+  for igw in $IGWS; do
+    aws ec2 detach-internet-gateway --internet-gateway-id "$igw" --vpc-id "$vpc" || true
+    aws ec2 delete-internet-gateway --internet-gateway-id "$igw" || true
+  done
 
-echo "📋 Step 7: Cleaning up CloudWatch log groups..."
-LOG_GROUPS=$(aws logs describe-log-groups \
-    --no-cli-pager \
-    --query "logGroups[?contains(logGroupName, '${STACK_NAME}-${STAGE}') || contains(logGroupName, '${STAGE}')].logGroupName" \
-    --output text 2>/dev/null || echo "")
+  # Route Tables
+  RTBS=$(aws ec2 describe-route-tables --filters Name=vpc-id,Values="$vpc" --query "RouteTables[].RouteTableId" --output text)
+  for rtb in $RTBS; do aws ec2 delete-route-table --route-table-id "$rtb" || true; done
 
-if [ ! -z "$LOG_GROUPS" ]; then
-    echo "Found log groups: $LOG_GROUPS"
-    for group in $LOG_GROUPS; do
-        echo "Deleting log group: $group"
-        aws logs delete-log-group --log-group-name "$group" || true
-    done
-else
-    echo "No log groups found"
-fi
+  # Security groups (not default)
+  SGROUPS=$(aws ec2 describe-security-groups --filters Name=vpc-id,Values="$vpc" --query "SecurityGroups[?GroupName!='default'].GroupId" --output text)
+  for sg in $SGROUPS; do aws ec2 delete-security-group --group-id "$sg" || true; done
 
-echo "📋 Step 8: Cleaning up IAM roles..."
-IAM_ROLES=$(aws iam list-roles \
-    --no-cli-pager \
-    --query "Roles[?contains(RoleName, '${STACK_NAME}-${STAGE}') || contains(RoleName, '${STAGE}')].RoleName" \
-    --output text 2>/dev/null || echo "")
+  # VPC endpoints
+  ENDPOINTS=$(aws ec2 describe-vpc-endpoints --filters Name=vpc-id,Values="$vpc" --query "VpcEndpoints[].VpcEndpointId" --output text)
+  for ep in $ENDPOINTS; do aws ec2 delete-vpc-endpoints --vpc-endpoint-ids "$ep" || true; done
 
-if [ ! -z "$IAM_ROLES" ]; then
-    echo "Found IAM roles: $IAM_ROLES"
-    for role in $IAM_ROLES; do
-        echo "Deleting IAM role: $role"
-        # Detach policies first
-        aws iam list-attached-role-policies --no-cli-pager --role-name "$role" --query 'AttachedPolicies[].PolicyArn' --output text | xargs -I {} aws iam detach-role-policy --role-name "$role" --policy-arn {} || true
-        aws iam delete-role --role-name "$role" || true
-    done
-else
-    echo "No IAM roles found"
-fi
+  # Finally delete the VPC
+  aws ec2 delete-vpc --vpc-id "$vpc" || true
+done
 
-echo "📋 Step 9: Attempting CloudFormation stack deletion..."
+# CloudWatch Logs
+echo "📋 Step 10: CloudWatch logs"
+LOGS=$(aws logs describe-log-groups --query "logGroups[?contains(logGroupName, '${STACK_NAME}-${STAGE}')].logGroupName" --output text)
+for log in $LOGS; do aws logs delete-log-group --log-group-name "$log" || true; done
+
+# IAM Roles
+echo "📋 Step 11: IAM roles"
+ROLES=$(aws iam list-roles --query "Roles[?contains(RoleName, '${STACK_NAME}-${STAGE}')].RoleName" --output text)
+for role in $ROLES; do
+  POLICIES=$(aws iam list-attached-role-policies --role-name "$role" --query 'AttachedPolicies[].PolicyArn' --output text)
+  for pol in $POLICIES; do aws iam detach-role-policy --role-name "$role" --policy-arn "$pol" || true; done
+  aws iam delete-role --role-name "$role" || true
+done
+
+# CloudFormation Stack
+echo "📋 Step 12: CloudFormation"
 if aws cloudformation describe-stacks --stack-name "$FULL_STACK_NAME" >/dev/null 2>&1; then
-    echo "Deleting CloudFormation stack: $FULL_STACK_NAME"
-    aws cloudformation delete-stack --stack-name "$FULL_STACK_NAME" || true
-    echo "Waiting for stack deletion to complete..."
-    aws cloudformation wait stack-delete-complete --stack-name "$FULL_STACK_NAME" || true
-else
-    echo "No CloudFormation stack found"
+  aws cloudformation delete-stack --stack-name "$FULL_STACK_NAME" || true
+  aws cloudformation wait stack-delete-complete --stack-name "$FULL_STACK_NAME" || true
 fi
 
-echo "📋 Step 10: Final SST remove attempt..."
-if sst remove --stage "$STAGE"; then
-    echo "✅ Final SST remove successful!"
-else
-    echo "⚠️  Final SST remove failed, but manual cleanup completed"
-fi
+# Final cleanup
+echo "📋 Step 13: Final SST remove retry"
+sst remove --stage "$STAGE" || true
 
-echo "=================================================="
-echo "🎉 Cleanup process completed!"
-echo "If any resources remain, you may need to manually delete them from the AWS Console." 
+echo "✅ All done. Manual cleanup complete."
