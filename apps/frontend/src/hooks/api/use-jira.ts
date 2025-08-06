@@ -51,7 +51,7 @@ export const jiraApi = {
 
 // Config Hooks
 export const useJiraConfig = () => {
-  return useQuery({
+  return useQuery<JiraConfig[]>({
     queryKey: queryKeys.jira.config(),
     queryFn: jiraApi.getConfig,
     staleTime: 10 * 60 * 1000, // 10 minutes - config doesn't change often
@@ -64,8 +64,14 @@ export const useUpdateJiraConfig = () => {
   return useMutation({
     mutationFn: jiraApi.updateConfig,
     onSuccess: data => {
-      // Update the config in cache - wrap in array since backend returns array
-      queryClient.setQueryData(queryKeys.jira.config(), [data]);
+      // Update the cache by adding the new config to the existing array
+      queryClient.setQueryData<JiraConfig[]>(
+        queryKeys.jira.config(),
+        oldData => {
+          if (!oldData) return [data];
+          return [...oldData, data];
+        },
+      );
       toast.success('Jira configuration updated successfully');
     },
     onError: handleApiError,
@@ -79,8 +85,14 @@ export const usePatchJiraConfig = () => {
     mutationFn: ({ id, query }: { id: string; query: Partial<JiraConfig> }) =>
       jiraApi.patchConfig(id, query),
     onSuccess: data => {
-      // Update the config in cache - wrap in array since backend returns array
-      queryClient.setQueryData(queryKeys.jira.config(), [data]);
+      // Update the cache by replacing the updated config in the array
+      queryClient.setQueryData<JiraConfig[]>(
+        queryKeys.jira.config(),
+        oldData => {
+          if (!oldData) return [data];
+          return oldData.map(config => (config.id === data.id ? data : config));
+        },
+      );
       toast.success('Jira configuration updated successfully');
     },
     onError: handleApiError,
@@ -92,8 +104,15 @@ export const useDeleteJiraConfig = () => {
 
   return useMutation({
     mutationFn: jiraApi.deleteConfig,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.jira.config() });
+    onSuccess: (_, deletedId) => {
+      // Update the cache by removing the deleted config from the array
+      queryClient.setQueryData<JiraConfig[]>(
+        queryKeys.jira.config(),
+        oldData => {
+          if (!oldData) return [];
+          return oldData.filter(config => config.id !== deletedId);
+        },
+      );
       toast.success('JIRA config deleted successfully');
     },
     onError: handleApiError,
@@ -122,8 +141,15 @@ export const useCreateJiraQuery = () => {
 
   return useMutation({
     mutationFn: jiraApi.createQuery,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.jira.queries() });
+    onSuccess: data => {
+      // Add the new query to cache instead of refetching
+      queryClient.setQueryData<JiraQuery[]>(
+        queryKeys.jira.queries(),
+        oldData => {
+          if (!oldData) return [data];
+          return [...oldData, data];
+        },
+      );
       toast.success('JIRA query created successfully');
     },
     onError: handleApiError,
@@ -135,8 +161,15 @@ export const useUpdateJiraQuery = () => {
 
   return useMutation({
     mutationFn: jiraApi.updateQuery,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.jira.queries() });
+    onSuccess: data => {
+      // Update the query in cache instead of refetching
+      queryClient.setQueryData<JiraQuery[]>(
+        queryKeys.jira.queries(),
+        oldData => {
+          if (!oldData) return [data];
+          return oldData.map(query => (query.id === data.id ? data : query));
+        },
+      );
       toast.success('JIRA query updated successfully');
     },
     onError: handleApiError,
@@ -149,8 +182,15 @@ export const usePatchJiraQuery = () => {
   return useMutation({
     mutationFn: ({ id, query }: { id: string; query: Partial<JiraQuery> }) =>
       jiraApi.patchQuery(id, query),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.jira.queries() });
+    onSuccess: data => {
+      // Update the query in cache instead of refetching
+      queryClient.setQueryData<JiraQuery[]>(
+        queryKeys.jira.queries(),
+        oldData => {
+          if (!oldData) return [data];
+          return oldData.map(query => (query.id === data.id ? data : query));
+        },
+      );
       toast.success('JIRA query updated successfully');
     },
     onError: handleApiError,
@@ -162,8 +202,15 @@ export const useDeleteJiraQuery = () => {
 
   return useMutation({
     mutationFn: jiraApi.deleteQuery,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.jira.queries() });
+    onSuccess: (_, deletedId) => {
+      // Remove the deleted query from cache instead of refetching
+      queryClient.setQueryData<JiraQuery[]>(
+        queryKeys.jira.queries(),
+        oldData => {
+          if (!oldData) return [];
+          return oldData.filter(query => query.id !== deletedId);
+        },
+      );
       toast.success('JIRA query deleted successfully');
     },
     onError: handleApiError,

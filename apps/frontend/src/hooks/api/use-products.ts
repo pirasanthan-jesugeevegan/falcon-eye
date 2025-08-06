@@ -21,7 +21,7 @@ const productsApi = {
 
 // Hooks
 export const useProducts = () => {
-  return useQuery({
+  return useQuery<Product[]>({
     queryKey: queryKeys.products.lists(),
     queryFn: productsApi.getAll,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -41,11 +41,15 @@ export const useCreateProduct = () => {
 
   return useMutation({
     mutationFn: productsApi.create,
-    onSuccess: () => {
-      // Invalidate and refetch products list
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.products.lists(),
-      });
+    onSuccess: data => {
+      // Add the new product to cache instead of refetching
+      queryClient.setQueryData<Product[]>(
+        queryKeys.products.lists(),
+        oldData => {
+          if (!oldData) return [data];
+          return [...oldData, data];
+        },
+      );
       toast.success('Product created successfully');
     },
     onError: handleApiError,
@@ -61,10 +65,16 @@ export const useUpdateProduct = () => {
     onSuccess: (data, variables) => {
       // Update the specific product in cache
       queryClient.setQueryData(queryKeys.products.detail(variables.id), data);
-      // Invalidate products list
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.products.lists(),
-      });
+      // Update the product in the list cache instead of refetching
+      queryClient.setQueryData<Product[]>(
+        queryKeys.products.lists(),
+        oldData => {
+          if (!oldData) return [data];
+          return oldData.map(product =>
+            product.id === data.id ? data : product,
+          );
+        },
+      );
       toast.success('Product updated successfully');
     },
     onError: handleApiError,
@@ -76,10 +86,15 @@ export const useDeleteProduct = () => {
 
   return useMutation({
     mutationFn: productsApi.delete,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.products.lists(),
-      });
+    onSuccess: (_, deletedId) => {
+      // Remove the deleted product from cache instead of refetching
+      queryClient.setQueryData<Product[]>(
+        queryKeys.products.lists(),
+        oldData => {
+          if (!oldData) return [];
+          return oldData.filter(product => product.id !== deletedId);
+        },
+      );
       toast.success('Product deleted successfully');
     },
     onError: handleApiError,

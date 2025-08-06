@@ -34,12 +34,7 @@ export function Sidebar() {
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       const sidebar = document.getElementById('sidebar');
-      if (
-        isMobile &&
-        isOpen &&
-        sidebar &&
-        !sidebar.contains(event.target as Node)
-      ) {
+      if (isMobile && sidebar && !sidebar.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -48,7 +43,7 @@ export function Sidebar() {
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
     };
-  }, [isMobile, isOpen]);
+  }, [isMobile]);
 
   // Close sidebar when route changes on mobile
   useEffect(() => {
@@ -67,7 +62,10 @@ export function Sidebar() {
       {isMobile && (
         <Button
           size="icon"
-          className="fixed top-6 left-4 z-50 md:hidden"
+          className={cn(
+            'fixed z-50 md:hidden',
+            isOpen ? 'top-6 left-50' : 'top-6 left-4',
+          )}
           onClick={toggleSidebar}
         >
           {isOpen ? <X /> : <AlignJustify />}

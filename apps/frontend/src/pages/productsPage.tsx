@@ -5,8 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ProductOverview from '@/components/ProductOverview';
 import UnitTestResults from '@/components/UnitTestResults';
 import E2ETestResults from '@/components/E2ETestResults';
-import DynamicHeroIcon from '@/components/ui/dynamicIcon';
-import * as HIcons from '@heroicons/react/24/solid';
+import { Header } from '@/components/ui/headers';
 
 // Calculate overall E2E test stats (helper function)
 function calculateE2EStats(e2eTests: E2ETestResult[] | undefined) {
@@ -66,18 +65,11 @@ export function ProductsPage() {
 
   return (
     <div className="container mx-auto md:p-6 space-y-6">
-      <div className="bg-purple-700 text-white p-4">
-        <div className="flex items-center mb-2">
-          {product.icon && (
-            <DynamicHeroIcon
-              icon={product.icon as keyof typeof HIcons}
-              className="h-8 w-8 mr-2"
-            />
-          )}
-          <h1 className="text-3xl font-bold">{product.productName}</h1>
-        </div>
-        <p className="text-white">Product details and quality metrics</p>
-      </div>
+      <Header
+        title={product.productName}
+        description="Product details and quality metrics"
+        icon={product.icon || ''}
+      />
 
       <Tabs defaultValue="overview">
         <TabsList className="grid grid-cols-3 md:w-[600px]">
