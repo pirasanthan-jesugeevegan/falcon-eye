@@ -18,13 +18,31 @@ env:
 
 jobs:
   deploy-pr:
-    if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'pull_request'
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    environment: pr-${{ github.event.workflow_run.pull_requests[0].number }}
+    environment: pr-${{ github.event.workflow_run.pull_requests[0].number || github.event.workflow_run.head_branch }}
 
     steps:
+      - name: Debug workflow run info
+        id: debug-info
+        run: |
+          echo "Workflow run conclusion: ${{ github.event.workflow_run.conclusion }}"
+          echo "Workflow run event: ${{ github.event.workflow_run.event }}"
+          echo "Workflow run head_branch: ${{ github.event.workflow_run.head_branch }}"
+          echo "Workflow run head_sha: ${{ github.event.workflow_run.head_sha }}"
+          echo "Number of pull requests: ${{ github.event.workflow_run.pull_requests.size }}"
+
+          # Determine PR number or use branch name as fallback
+          if [ "${{ github.event.workflow_run.pull_requests.size }}" -gt 0 ]; then
+            PR_NUMBER="${{ github.event.workflow_run.pull_requests[0].number }}"
+            echo "PR number: $PR_NUMBER"
+            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          else
+            BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
+            echo "No PR found, using branch: $BRANCH_NAME"
+            echo "pr_number=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -84,7 +102,7 @@ jobs:
         run: |
           cd infra
           # Deploy and capture output
-          DEPLOY_OUTPUT=$(pnpm run deploy:sst --stage pr-${{ github.event.workflow_run.pull_requests[0].number }} 2>&1)
+          DEPLOY_OUTPUT=$(pnpm run deploy:sst --stage pr-${{ steps.debug-info.outputs.pr_number }} 2>&1)
           echo "$DEPLOY_OUTPUT"
 
           # Extract backend URL from NestJSAPI resource
@@ -154,7 +172,7 @@ jobs:
   destroy-pr:
     if: github.event.action == 'closed'
     runs-on: ubuntu-latest
-    environment: pr-${{ github.event.workflow_run.pull_requests[0].number }}
+    environment: pr-${{ github.event.workflow_run.pull_requests[0].number || github.event.workflow_run.head_branch }}
 
     steps:
       - name: Checkout code
@@ -180,11 +198,22 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Get PR number for destroy
+        id: destroy-info
+        run: |
+          if [ "${{ github.event.workflow_run.pull_requests.size }}" -gt 0 ]; then
+            PR_NUMBER="${{ github.event.workflow_run.pull_requests[0].number }}"
+            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          else
+            BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
+            echo "pr_number=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          fi
+
       - name: Destroy PR environment
         run: |
           cd infra
           chmod +x remove-all.sh
-          STAGE=pr-${{ github.event.workflow_run.pull_requests[0].number }} ./remove-all.sh
+          STAGE=pr-${{ steps.destroy-info.outputs.pr_number }} ./remove-all.sh
         env:
           AWS_REGION: ${{ env.AWS_REGION }}
         continue-on-error: true
