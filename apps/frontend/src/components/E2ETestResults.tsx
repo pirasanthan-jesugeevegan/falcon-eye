@@ -72,12 +72,16 @@ export default function E2ETestResults({
       cell: ({ row }) => {
         const status = row.getValue('status') as string;
         let statusIcon;
-        let badgeVariant: 'default' | 'destructive' | 'outline' | 'secondary' =
-          'default';
+        let badgeVariant:
+          | 'default'
+          | 'destructive'
+          | 'outline'
+          | 'secondary'
+          | 'success' = 'default';
 
         if (status === 'passed') {
           statusIcon = <CheckCircle className="h-4 w-4 mr-1" />;
-          badgeVariant = 'default';
+          badgeVariant = 'success';
         } else if (status === 'failed') {
           statusIcon = <XCircle className="h-4 w-4 mr-1" />;
           badgeVariant = 'destructive';
@@ -205,7 +209,7 @@ export default function E2ETestResults({
                   <Badge
                     variant={
                       e2eTestResults[0].status === 'passed'
-                        ? 'default'
+                        ? 'success'
                         : 'destructive'
                     }
                     className="capitalize flex items-center"

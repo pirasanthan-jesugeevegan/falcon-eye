@@ -59,7 +59,7 @@ export function SonarCloudPullRequestsTable({
         <Badge
           variant={
             row.original.status.qualityGateStatus === 'OK'
-              ? 'outline'
+              ? 'success'
               : 'destructive'
           }
         >
