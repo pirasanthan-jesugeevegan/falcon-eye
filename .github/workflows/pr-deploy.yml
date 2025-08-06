@@ -1,6 +1,10 @@
 name: PR Deployment
 
 on:
+  workflow_run:
+    workflows: ['Continuous Integration']
+    types:
+      - completed
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches: [master]
@@ -17,7 +21,7 @@ env:
 
 jobs:
   deploy-pr:
-    if: github.event.action != 'closed'
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
     runs-on: ubuntu-latest
     environment: pr-${{ github.event.number }}
 
