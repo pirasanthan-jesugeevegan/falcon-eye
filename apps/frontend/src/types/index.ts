@@ -78,3 +78,51 @@ export interface SonarCloudConfig {
   baseUrl: string;
   apiToken: string;
 }
+
+export interface SonarCloudData {
+  project_status?: {
+    projectStatus?: {
+      status?: string;
+      conditions?: Array<{
+        status: string;
+        metricKey: string;
+        comparator: string;
+        errorThreshold: string;
+        actualValue: string;
+      }>;
+      periods?: Array<{
+        index: number;
+        mode: string;
+        date: string;
+      }>;
+    };
+  };
+  pull_request?: {
+    pullRequests?: Array<{
+      key: string;
+      title: string;
+      branch: string;
+      base: string;
+      target: string;
+      url: string;
+      analysisDate: string;
+      pullRequestId: string;
+      status: {
+        qualityGateStatus: string;
+        bugs: number;
+        vulnerabilities: number;
+        codeSmells: number;
+      };
+      commit: {
+        sha: string;
+        author: {
+          name: string;
+          login: string;
+          avatar: string;
+        };
+        date: string;
+        message: string;
+      };
+    }>;
+  };
+}

@@ -17,7 +17,7 @@ export interface SonarCloudQuery {
 
 // API functions
 export const sonarCloudApi = {
-  getConfig: (): Promise<SonarCloudConfig> =>
+  getConfig: (): Promise<SonarCloudConfig[]> =>
     apiClient.get('/sonarcloud/config/'),
 
   updateConfig: (config: SonarCloudConfig): Promise<SonarCloudConfig> =>
@@ -62,7 +62,7 @@ export const sonarCloudApi = {
 
 // Config Hooks
 export const useSonarCloudConfig = () => {
-  return useQuery({
+  return useQuery<SonarCloudConfig[]>({
     queryKey: queryKeys.sonarCloud.config(),
     queryFn: sonarCloudApi.getConfig,
     staleTime: 10 * 60 * 1000, // 10 minutes - config doesn't change often
@@ -75,8 +75,14 @@ export const useUpdateSonarCloudConfig = () => {
   return useMutation({
     mutationFn: sonarCloudApi.updateConfig,
     onSuccess: data => {
-      // Update the config in cache
-      queryClient.setQueryData(queryKeys.sonarCloud.config(), data);
+      // Update the cache by adding the new config to the existing array
+      queryClient.setQueryData<SonarCloudConfig[]>(
+        queryKeys.sonarCloud.config(),
+        oldData => {
+          if (!oldData) return [data];
+          return [...oldData, data];
+        },
+      );
       toast.success('SonarCloud configuration updated successfully');
     },
     onError: handleApiError,
@@ -95,8 +101,14 @@ export const usePatchSonarCloudConfig = () => {
       query: Partial<SonarCloudConfig>;
     }) => sonarCloudApi.patchConfig(id, query),
     onSuccess: data => {
-      // Update the config in cache
-      queryClient.setQueryData(queryKeys.sonarCloud.config(), data);
+      // Update the cache by replacing the updated config in the array
+      queryClient.setQueryData<SonarCloudConfig[]>(
+        queryKeys.sonarCloud.config(),
+        oldData => {
+          if (!oldData) return [data];
+          return oldData.map(config => (config.id === data.id ? data : config));
+        },
+      );
       toast.success('SonarCloud configuration updated successfully');
     },
     onError: handleApiError,
@@ -108,10 +120,15 @@ export const useDeleteSonarCloudConfig = () => {
 
   return useMutation({
     mutationFn: sonarCloudApi.deleteConfig,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.sonarCloud.config(),
-      });
+    onSuccess: (_, deletedId) => {
+      // Update the cache by removing the deleted config from the array
+      queryClient.setQueryData<SonarCloudConfig[]>(
+        queryKeys.sonarCloud.config(),
+        oldData => {
+          if (!oldData) return [];
+          return oldData.filter(config => config.id !== deletedId);
+        },
+      );
       toast.success('SonarCloud config deleted successfully');
     },
     onError: handleApiError,
@@ -140,10 +157,15 @@ export const useCreateSonarCloudQuery = () => {
 
   return useMutation({
     mutationFn: sonarCloudApi.createQuery,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.sonarCloud.queries(),
-      });
+    onSuccess: data => {
+      // Add the new query to cache instead of refetching
+      queryClient.setQueryData<SonarCloudQuery[]>(
+        queryKeys.sonarCloud.queries(),
+        oldData => {
+          if (!oldData) return [data];
+          return [...oldData, data];
+        },
+      );
       toast.success('SonarCloud query created successfully');
     },
     onError: handleApiError,
@@ -155,10 +177,15 @@ export const useUpdateSonarCloudQuery = () => {
 
   return useMutation({
     mutationFn: sonarCloudApi.updateQuery,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.sonarCloud.queries(),
-      });
+    onSuccess: data => {
+      // Update the query in cache instead of refetching
+      queryClient.setQueryData<SonarCloudQuery[]>(
+        queryKeys.sonarCloud.queries(),
+        oldData => {
+          if (!oldData) return [data];
+          return oldData.map(query => (query.id === data.id ? data : query));
+        },
+      );
       toast.success('SonarCloud query updated successfully');
     },
     onError: handleApiError,
@@ -176,10 +203,15 @@ export const usePatchSonarCloudQuery = () => {
       id: string;
       query: Partial<SonarCloudQuery>;
     }) => sonarCloudApi.patchQuery(id, query),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.sonarCloud.queries(),
-      });
+    onSuccess: data => {
+      // Update the query in cache instead of refetching
+      queryClient.setQueryData<SonarCloudQuery[]>(
+        queryKeys.sonarCloud.queries(),
+        oldData => {
+          if (!oldData) return [data];
+          return oldData.map(query => (query.id === data.id ? data : query));
+        },
+      );
       toast.success('SonarCloud query updated successfully');
     },
     onError: handleApiError,
@@ -191,10 +223,15 @@ export const useDeleteSonarCloudQuery = () => {
 
   return useMutation({
     mutationFn: sonarCloudApi.deleteQuery,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.sonarCloud.queries(),
-      });
+    onSuccess: (_, deletedId) => {
+      // Remove the deleted query from cache instead of refetching
+      queryClient.setQueryData<SonarCloudQuery[]>(
+        queryKeys.sonarCloud.queries(),
+        oldData => {
+          if (!oldData) return [];
+          return oldData.filter(query => query.id !== deletedId);
+        },
+      );
       toast.success('SonarCloud query deleted successfully');
     },
     onError: handleApiError,

@@ -1,7 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductSettingsCard } from '@/components/settings/ProductSettingsCard';
 import { JiraIntegrationCard } from '@/components/settings/JiraIntegrationCard';
-// import SonarCloudIntegrationCard from '@/components/settings/SonarCloudIntegrationCard';
+import SonarCloudIntegrationCard from '@/components/settings/SonarCloudIntegrationCard';
 
 export function SettingsPage() {
   return (
@@ -17,7 +17,7 @@ export function SettingsPage() {
         <TabsList className="grid w-full grid-cols-3 md:w-[600px]">
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="jira">Jira</TabsTrigger>
-          {/*  <TabsTrigger value="sonarcloud">SonarCloud</TabsTrigger> */}
+          <TabsTrigger value="sonarcloud">SonarCloud</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="mt-6 space-y-6">
@@ -28,9 +28,9 @@ export function SettingsPage() {
           <JiraIntegrationCard />
         </TabsContent>
 
-        {/*   <TabsContent value="sonarcloud" className="mt-6 space-y-6">
+        <TabsContent value="sonarcloud" className="mt-6 space-y-6">
           <SonarCloudIntegrationCard />
-        </TabsContent> */}
+        </TabsContent>
       </Tabs>
     </div>
   );
