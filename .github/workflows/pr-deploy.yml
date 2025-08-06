@@ -5,10 +5,6 @@ on:
     workflows: ['Continuous Integration']
     types:
       - completed
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
-    branches: [master]
-
 permissions:
   contents: read
   pull-requests: write
@@ -21,11 +17,16 @@ env:
 
 jobs:
   deploy-pr:
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'pull_request'
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request'
     runs-on: ubuntu-latest
-    environment: pr-${{ github.event.number }}
+    environment: pr-${{ github.event.workflow_run.pull_requests[0].number }}
 
     steps:
+      - name: Extract PR Number
+        id: extract_pr
+        run: echo "PR_NUMBER=${{ github.event.workflow_run.pull_requests[0].number }}" >> $GITHUB_OUTPUT
       - name: Checkout code
         uses: actions/checkout@v4
 
