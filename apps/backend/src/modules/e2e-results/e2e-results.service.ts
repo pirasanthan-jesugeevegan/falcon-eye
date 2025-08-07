@@ -17,6 +17,7 @@ export class E2EResultsService {
   async findAll(): Promise<E2EResult[]> {
     return this.e2eResultsRepository.find({
       relations: ['product'],
+      order: { timestamp: 'DESC' },
     });
   }
 
@@ -39,6 +40,7 @@ export class E2EResultsService {
     return this.e2eResultsRepository.find({
       where: { product: { productName } }, // Filter by productName instead of productId
       relations: ['product'],
+      order: { timestamp: 'DESC' },
     });
   }
 

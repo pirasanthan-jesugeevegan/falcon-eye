@@ -10,8 +10,8 @@ export class Migrations1753816427815 implements MigrationInterface {
                 "productName" character varying(255) NOT NULL,
                 "icon" character varying(255),
                 "path" character varying(255),
-                "created_at" TIMESTAMP NOT NULL DEFAULT now(),
-                "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+                "createdAt" TIMESTAMP NOT NULL DEFAULT now(),
+                "updatedAt" TIMESTAMP NOT NULL DEFAULT now(),
                 "isActive" boolean NOT NULL DEFAULT true,
                 CONSTRAINT "UQ_270b1a4eb00eebe56b528e909f6" UNIQUE ("productName"),
                 CONSTRAINT "PK_0806c755e0aca124e67c0cf6d7d" PRIMARY KEY ("id")

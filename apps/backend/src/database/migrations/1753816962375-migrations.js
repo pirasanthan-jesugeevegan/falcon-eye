@@ -28,19 +28,19 @@ module.exports = class Migrations1753816962375 {
       `ALTER TABLE "unit_results" DROP COLUMN "productName"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "unit_results" DROP COLUMN "pull_request"`,
+      `ALTER TABLE "unit_results" DROP COLUMN "pullRequest"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "unit_results" DROP COLUMN "statement_coverage"`,
+      `ALTER TABLE "unit_results" DROP COLUMN "statementCoverage"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "unit_results" DROP COLUMN "function_coverage"`,
+      `ALTER TABLE "unit_results" DROP COLUMN "functionCoverage"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "unit_results" DROP COLUMN "branch_coverage"`,
+      `ALTER TABLE "unit_results" DROP COLUMN "branchCoverage"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "unit_results" DROP COLUMN "line_coverage"`,
+      `ALTER TABLE "unit_results" DROP COLUMN "lineCoverage"`,
     );
     await queryRunner.query(
       `ALTER TABLE "e2e_results" ADD "reportUrl" text NOT NULL`,
@@ -100,31 +100,31 @@ module.exports = class Migrations1753816962375 {
       `ALTER TABLE "e2e_results" DROP COLUMN "reportUrl"`,
     );
     await queryRunner.query(
-      `ALTER TABLE "unit_results" ADD "line_coverage" character varying NOT NULL`,
+      `ALTER TABLE "unit_results" ADD "lineCoverage" character varying NOT NULL`,
     );
     await queryRunner.query(
-      `ALTER TABLE "unit_results" ADD "branch_coverage" character varying NOT NULL`,
+      `ALTER TABLE "unit_results" ADD "branchCoverage" character varying NOT NULL`,
     );
     await queryRunner.query(
-      `ALTER TABLE "unit_results" ADD "function_coverage" character varying NOT NULL`,
+      `ALTER TABLE "unit_results" ADD "functionCoverage" character varying NOT NULL`,
     );
     await queryRunner.query(
-      `ALTER TABLE "unit_results" ADD "statement_coverage" character varying NOT NULL`,
+      `ALTER TABLE "unit_results" ADD "statementCoverage" character varying NOT NULL`,
     );
     await queryRunner.query(
-      `ALTER TABLE "unit_results" ADD "pull_request" character varying NOT NULL`,
+      `ALTER TABLE "unit_results" ADD "pullRequest" character varying NOT NULL`,
     );
     await queryRunner.query(
       `ALTER TABLE "unit_results" ADD "productName" uuid`,
     );
     await queryRunner.query(
-      `ALTER TABLE "products" ADD "updated_at" TIMESTAMP NOT NULL DEFAULT now()`,
+      `ALTER TABLE "products" ADD "updatedAt" TIMESTAMP NOT NULL DEFAULT now()`,
     );
     await queryRunner.query(
-      `ALTER TABLE "products" ADD "created_at" TIMESTAMP NOT NULL DEFAULT now()`,
+      `ALTER TABLE "products" ADD "createdAt" TIMESTAMP NOT NULL DEFAULT now()`,
     );
     await queryRunner.query(
-      `ALTER TABLE "e2e_results" ADD "report_url" text NOT NULL`,
+      `ALTER TABLE "e2e_results" ADD "reportUrl" text NOT NULL`,
     );
     await queryRunner.query(`ALTER TABLE "e2e_results" ADD "productName" uuid`);
     await queryRunner.query(

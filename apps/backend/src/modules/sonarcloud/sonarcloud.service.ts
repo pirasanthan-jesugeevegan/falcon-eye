@@ -216,7 +216,6 @@ export class SonarCloudService {
       sonarCloudQuery.sonarCloudConfigId,
     );
     const result: Record<string, any> = {};
-    console.log(sonarCloudQuery.metric);
 
     await Promise.all(
       sonarCloudQuery.metric.map(async (metric) => {
@@ -226,7 +225,6 @@ export class SonarCloudService {
           sonarCloudQuery.project,
           metric as 'pull_request' | 'project_status',
         );
-        console.log(data);
         result[metric] = data;
       }),
     );

@@ -11,21 +11,24 @@ import {
 } from '@/components/ui/tooltip';
 import { useMemo } from 'react';
 import { Header } from '@/components/ui/headers';
+import type { JiraIssue } from '@/types';
 
 export function JiraPage() {
   const { jiraId } = useParams({ from: '/jira/$jiraId' });
 
   const { data, isLoading, error } = useExecuteJiraQuery(jiraId);
   const { data: queryData } = useJiraQuery(jiraId);
+  console.log(data);
 
+  // Update the reshaped data type to match the actual data structure
   const reshaped = useMemo(() => {
     if (!data?.issues) return [];
-    return data.issues.map((item: any) => ({
+    return data.issues.map((item: JiraIssue) => ({
       id: item.id,
       key: item.key,
       summary: item.fields.summary,
-      status: item.fields.status?.name,
-      assignee: item.fields.assignee?.displayName,
+      status: item.fields.status?.name || 'Unknown',
+      assignee: item.fields.assignee?.displayName || 'Unassigned',
       created: item.fields.created,
       updated: item.fields.updated,
     }));
@@ -57,6 +60,7 @@ export function JiraPage() {
     );
   }
 
+  // Update the column type definition to match the reshaped data
   const columns: ColumnDef<{
     id: string;
     key: string;
@@ -103,7 +107,7 @@ export function JiraPage() {
       header: 'Assignee',
       accessorFn: row => row.assignee,
       cell: ({ row }) => {
-        const name: string = row.getValue('assignee') || 'Unassigned';
+        const name: string = row.getValue('assignee');
         return (
           <div className="flex items-center">
             <Tooltip>
