@@ -2,7 +2,7 @@ import { useParams } from '@tanstack/react-router';
 import { useProduct, useTestResults } from '@/hooks/api';
 import type { E2ETestResult } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import ProductOverview from '@/components/ProductOverview';
+import ProductOverview from '@/components/products/ProductOverview';
 import UnitTestResults from '@/components/UnitTestResults';
 import E2ETestResults from '@/components/E2ETestResults';
 import { Header } from '@/components/ui/headers';
@@ -79,7 +79,11 @@ export function ProductsPage() {
         </TabsList>
 
         <TabsContent value="overview" className="mt-6 space-y-6">
-          <ProductOverview product={product} e2eStats={e2eStats} />
+          <ProductOverview
+            product={product}
+            unitTestResults={unitResults.data || []}
+            e2eTestResults={e2eResults.data || []}
+          />
         </TabsContent>
         <TabsContent value="unit-tests" className="mt-6 space-y-6">
           <UnitTestResults unitTestResults={unitResults.data || []} />

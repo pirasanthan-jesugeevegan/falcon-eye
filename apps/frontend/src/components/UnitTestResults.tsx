@@ -152,7 +152,7 @@ export default function UnitTestResults({
                 <div className="flex items-center">
                   <GitPullRequest className="h-4 w-4 mr-2 flex-shrink-0" />
                   <span className="font-semibold text-sm truncate">
-                    {unitTestResults[0].pull_request}
+                    {unitTestResults[0].pullRequest}
                   </span>
                 </div>
                 <div className="flex items-center">
@@ -203,7 +203,7 @@ export default function UnitTestResults({
                           {unitTest.id}
                         </span>
                         <span className="ml-2 text-xs sm:text-sm truncate">
-                          {unitTest.pull_request}
+                          {unitTest.pullRequest}
                         </span>
                       </div>
                       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:space-x-4">

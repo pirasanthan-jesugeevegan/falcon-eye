@@ -1,8 +1,12 @@
 name: Deploy to Production (PR Merge)
 
 on:
-  repository_dispatch:
-    types: [deploy-to-production]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number that was merged'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -109,7 +113,7 @@ jobs:
           script: |
             const backendUrl = process.env.BACKEND_URL;
             const frontendUrl = process.env.FRONTEND_URL;
-            const prNumber = '${{ github.event.client_payload.pr_number }}';
+            const prNumber = '${{ github.event.inputs.pr_number }}';
 
             let comment = `🎉 **Production Deployment Complete!**\n\n**PR:** #${prNumber}\n\n`;
 
@@ -137,7 +141,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const prNumber = '${{ github.event.client_payload.pr_number }}';
+            const prNumber = '${{ github.event.inputs.pr_number }}';
             console.log(`Production deployment completed for PR #${prNumber}!`);
             console.log(`Frontend URL: ${process.env.FRONTEND_URL}`);
             console.log(`Backend URL: ${process.env.BACKEND_URL}`);

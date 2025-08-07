@@ -19,7 +19,7 @@ export interface JiraResult {
 
 export interface UnitTestResult {
   id: string;
-  pull_request: string;
+  pullRequest: string;
   result: {
     id: string;
     author: string;

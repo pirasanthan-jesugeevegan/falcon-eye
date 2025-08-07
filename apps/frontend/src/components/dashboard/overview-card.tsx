@@ -2,8 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface OverviewCardProps {
   title: string;
-  value: number;
-  description?: string;
+  value: number | string;
+  description?: string | React.ReactNode;
   icon?: React.ReactNode;
   change?: {
     value: number;
