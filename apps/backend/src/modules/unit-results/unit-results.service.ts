@@ -44,14 +44,14 @@ export class UnitResultsService {
       order: { date: 'DESC' },
     });
 
-    // Group the results by pull_request
+    // Group the results by pullRequest
     return rawData.reduce((acc: any[], item: any) => {
       const existingItem = acc.find(
-        (groupedItem: { pull_request: string }) =>
-          groupedItem.pull_request === item.pull_request,
+        (groupedItem: { pullRequest: string }) =>
+          groupedItem.pullRequest === item.pullRequest,
       );
 
-      // If an item with the same pull_request exists, push the result to that item
+      // If an item with the same pullRequest exists, push the result to that item
       if (existingItem) {
         existingItem.result.push({
           id: item.id,
@@ -65,10 +65,10 @@ export class UnitResultsService {
           author: item.author,
         });
       } else {
-        // If no item with that pull_request exists, create a new entry
+        // If no item with that pullRequest exists, create a new entry
         acc.push({
           id: item.id,
-          pull_request: item.pull_request,
+          pullRequest: item.pullRequest,
           result: [
             {
               id: item.id,

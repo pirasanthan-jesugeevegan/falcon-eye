@@ -77,7 +77,7 @@ export function Sidebar() {
         id="sidebar"
         className={cn(
           'top-0 left-0 z-40 h-full w-64 bg-background transition-all duration-300 ease-in-out',
-          isMobile ? 'fixed' : 'relative',
+          isMobile ? 'fixed' : 'fixed md:block',
           isMobile
             ? isOpen
               ? 'translate-x-0'
