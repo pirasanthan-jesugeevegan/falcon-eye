@@ -248,7 +248,7 @@ export const useExecuteSonarCloudQuery = (id: string) => {
 
 export const useAllSonarCloudIssues = () => {
   return useQuery({
-    queryKey: queryKeys.sonarCloud.all, // You can customize this key
+    queryKey: queryKeys.sonarCloud.all,
     queryFn: async () => {
       const queries = await sonarCloudApi.getQueries();
 
@@ -256,14 +256,16 @@ export const useAllSonarCloudIssues = () => {
         queries.map(async query => {
           const result = await sonarCloudApi.getExecuteQuery(query.id!);
           return {
-            issues: result.pull_request,
             queryName: query.name,
+            project: query.project,
+            pull_request: result.pull_request,
+            project_status: result.project_status,
           };
         }),
       );
 
       return { results: results.flat(), queries: queries };
     },
-    staleTime: 5 * 60 * 1000, // optional: cache for 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };

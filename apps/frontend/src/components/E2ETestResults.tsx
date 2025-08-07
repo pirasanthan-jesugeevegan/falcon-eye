@@ -8,7 +8,6 @@ import {
   Calendar,
   PauseCircle,
   Clock,
-  AlertCircle,
 } from 'lucide-react';
 import {
   Card,
@@ -18,8 +17,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
 import { dateFormat } from '@/lib/utils';
+import { StatusBadge } from './ui/status-badge';
 
 interface E2ETestResultsProps {
   e2eTestResults: E2ETestResult[];
@@ -70,34 +69,10 @@ export default function E2ETestResults({
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => {
-        const status = row.getValue('status') as string;
-        let statusIcon;
-        let badgeVariant:
-          | 'default'
-          | 'destructive'
-          | 'outline'
-          | 'secondary'
-          | 'success' = 'default';
-
-        if (status === 'passed') {
-          statusIcon = <CheckCircle className="h-4 w-4 mr-1" />;
-          badgeVariant = 'success';
-        } else if (status === 'failed') {
-          statusIcon = <XCircle className="h-4 w-4 mr-1" />;
-          badgeVariant = 'destructive';
-        } else {
-          statusIcon = <AlertCircle className="h-4 w-4 mr-1" />;
-          badgeVariant = 'secondary';
-        }
-
         return (
-          <Badge
-            variant={badgeVariant}
-            className="capitalize flex items-center"
-          >
-            {statusIcon}
-            {status}
-          </Badge>
+          <StatusBadge status={row.getValue('status')}>
+            {row.getValue('status')}
+          </StatusBadge>
         );
       },
     },
@@ -175,14 +150,6 @@ export default function E2ETestResults({
                       ? Math.round((e2eStats.passed / e2eStats.total) * 100)
                       : 0
                   }
-                  className={`h-4 ${
-                    e2eStats.total && e2eStats.passed / e2eStats.total >= 0.8
-                      ? 'bg-green-500'
-                      : e2eStats.total &&
-                          e2eStats.passed / e2eStats.total >= 0.6
-                        ? 'bg-amber-500'
-                        : 'bg-red-500'
-                  }`}
                 />
               </div>
               <div className="ml-4 text-2xl font-bold">
@@ -206,21 +173,9 @@ export default function E2ETestResults({
                   {e2eTestResults[0].name}
                 </div>
                 <div className="mt-1 flex items-center">
-                  <Badge
-                    variant={
-                      e2eTestResults[0].status === 'passed'
-                        ? 'success'
-                        : 'destructive'
-                    }
-                    className="capitalize flex items-center"
-                  >
-                    {e2eTestResults[0].status === 'passed' ? (
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                    ) : (
-                      <XCircle className="h-3 w-3 mr-1" />
-                    )}
+                  <StatusBadge status={e2eTestResults[0].status}>
                     {e2eTestResults[0].status}
-                  </Badge>
+                  </StatusBadge>
                 </div>
                 <div className="mt-2 text-xs text-muted-foreground">
                   {dateFormat(e2eTestResults[0].timestamp)}

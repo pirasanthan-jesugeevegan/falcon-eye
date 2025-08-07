@@ -23,26 +23,26 @@ export interface UnitTestResult {
   result: {
     id: string;
     author: string;
-    branch_coverage: string;
+    branchCoverage: string;
     commit: string;
     date: string;
-    function_coverage: string;
-    line_coverage: string;
+    functionCoverage: string;
+    lineCoverage: string;
     percentage: string;
-    statement_coverage: string;
+    statementCoverage: string;
   }[];
 }
 
 export interface CommitTestResult {
   id: string;
   author: string;
-  branch_coverage: string;
+  branchCoverage: string;
   commit: string;
   date: string;
-  function_coverage: string;
-  line_coverage: string;
+  functionCoverage: string;
+  lineCoverage: string;
   percentage: string;
-  statement_coverage: string;
+  statementCoverage: string;
 }
 
 export interface E2ETestResult {
@@ -125,4 +125,117 @@ export interface SonarCloudData {
       };
     }>;
   };
+}
+
+export interface SonarCloudQuery {
+  id?: string;
+  sonarCloudConfigId: string;
+  name: string;
+  metric: ('pull_request' | 'project_status')[];
+  project: string;
+  description?: string;
+  isActive: boolean;
+}
+
+export interface SonarCloudIssue {
+  results: {
+    queryName: string;
+    project: string;
+    pull_request: unknown;
+    project_status: unknown;
+  }[];
+  queries: SonarCloudQuery[];
+}
+
+// Add these new interfaces for Jira data
+
+export interface JiraIssue {
+  expand: string;
+  id: string;
+  self: string;
+  key: string;
+  fields: {
+    summary: string;
+    issuetype: {
+      self: string;
+      id: string;
+      description: string;
+      iconUrl: string;
+      name: string;
+      subtask: boolean;
+      avatarId: number;
+      hierarchyLevel: number;
+    };
+    created: string;
+    assignee: {
+      self: string;
+      accountId: string;
+      avatarUrls: Record<string, string>;
+      displayName: string;
+      active: boolean;
+      timeZone: string;
+      accountType: string;
+      emailAddress?: string;
+    } | null;
+    priority: {
+      self: string;
+      iconUrl: string;
+      name: string;
+      id: string;
+    };
+    updated: string;
+    status: {
+      self: string;
+      description: string;
+      iconUrl: string;
+      name: string;
+      id: string;
+      statusCategory: {
+        self: string;
+        id: number;
+        key: string;
+        colorName: string;
+        name: string;
+      };
+    };
+  };
+}
+export interface JiraExecuteQueryResponse {
+  issues: JiraIssue[];
+  expand: string;
+  startAt: number;
+  maxResults: number;
+  total: number;
+}
+
+export interface JiraQueryResult {
+  issues: JiraIssue[];
+  queryName: string;
+}
+
+export interface JiraQuery {
+  id: string;
+  name: string;
+  jqlQuery: string;
+  description: string;
+  jiraConfigId: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  jiraConfig: {
+    id: string;
+    instanceName: string;
+    baseUrl: string;
+    email: string;
+    apiToken: string;
+    projectKey: string | null;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+export interface JiraAllIssuesResponse {
+  results: JiraQueryResult[];
+  queries: JiraQuery[];
 }

@@ -10,6 +10,13 @@ const testResultsApi = {
 
   getE2EResults: (productName: string): Promise<E2ETestResult[]> =>
     apiClient.get(`/e2e-results?productName=${productName}`),
+
+  // New function to get all test results
+  getAllUnitResults: (): Promise<UnitTestResult[]> =>
+    apiClient.get('/unit-results'),
+
+  getAllE2EResults: (): Promise<E2ETestResult[]> =>
+    apiClient.get('/e2e-results'),
 };
 
 // Hooks
@@ -42,5 +49,28 @@ export const useTestResults = (productName: string) => {
     isLoading: unitResults.isLoading || e2eResults.isLoading,
     isError: unitResults.isError || e2eResults.isError,
     error: unitResults.error || e2eResults.error,
+  };
+};
+
+// New hook to get all test results across all products
+export const useAllTestResults = () => {
+  const allUnitResults = useQuery({
+    queryKey: queryKeys.testResults.unit.all(),
+    queryFn: testResultsApi.getAllUnitResults,
+    staleTime: 2 * 60 * 1000,
+  });
+
+  const allE2EResults = useQuery({
+    queryKey: queryKeys.testResults.e2e.all(),
+    queryFn: testResultsApi.getAllE2EResults,
+    staleTime: 2 * 60 * 1000,
+  });
+
+  return {
+    allUnitResults,
+    allE2EResults,
+    isLoading: allUnitResults.isLoading || allE2EResults.isLoading,
+    isError: allUnitResults.isError || allE2EResults.isError,
+    error: allUnitResults.error || allE2EResults.error,
   };
 };

@@ -110,13 +110,20 @@ for vpc in $VPCS; do
   IGWS=$(aws ec2 describe-internet-gateways \
     --filters Name=attachment.vpc-id,Values="$vpc" --query "InternetGateways[].InternetGatewayId" --output text)
   for igw in $IGWS; do
+    # Detach before deleting
     aws ec2 detach-internet-gateway --internet-gateway-id "$igw" --vpc-id "$vpc" || true
     aws ec2 delete-internet-gateway --internet-gateway-id "$igw" || true
   done
 
-  # Route Tables
+  # Route Tables - Detach associations first
   RTBS=$(aws ec2 describe-route-tables --filters Name=vpc-id,Values="$vpc" --query "RouteTables[].RouteTableId" --output text)
-  for rtb in $RTBS; do aws ec2 delete-route-table --route-table-id "$rtb" || true; done
+  for rtb in $RTBS; do
+    ASSOCIATIONS=$(aws ec2 describe-route-tables --route-table-ids "$rtb" --query "RouteTables[0].Associations")
+    for assoc in $(echo "$ASSOCIATIONS" | jq -r '.[] | .AssociationId'); do
+      aws ec2 disassociate-route-table --association-id "$assoc" || true
+    done
+    aws ec2 delete-route-table --route-table-id "$rtb" || true
+  done
 
   # Security groups (not default)
   SGROUPS=$(aws ec2 describe-security-groups --filters Name=vpc-id,Values="$vpc" --query "SecurityGroups[?GroupName!='default'].GroupId" --output text)
@@ -154,5 +161,20 @@ fi
 # Final cleanup
 echo "📋 Step 13: Final SST remove retry"
 sst remove --stage "$STAGE" || true
+
+# Secrets Manager
+echo "📋 Step 14: Deleting Secrets Manager secrets"
+SECRETS=$(aws secretsmanager list-secrets --query "SecretList[?contains(Name, '${STACK_NAME}-${STAGE}')].ARN" --output text)
+for secret in $SECRETS; do
+  echo "Deleting secret: $secret"
+  aws secretsmanager delete-secret --secret-id "$secret" --force-delete-without-recovery || true
+done
+
+# CloudFormation Stack
+echo "📋 Step 15: CloudFormation"
+if aws cloudformation describe-stacks --stack-name "$FULL_STACK_NAME" >/dev/null 2>&1; then
+  aws cloudformation delete-stack --stack-name "$FULL_STACK_NAME" || true
+  aws cloudformation wait stack-delete-complete --stack-name "$FULL_STACK_NAME" || true
+fi
 
 echo "✅ All done. Manual cleanup complete."

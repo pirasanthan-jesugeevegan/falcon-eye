@@ -17,6 +17,7 @@ export class UnitResultsService {
   async findAll(): Promise<UnitResult[]> {
     return this.unitResultsRepository.find({
       relations: ['product'],
+      order: { date: 'DESC' },
     });
   }
 
@@ -40,6 +41,7 @@ export class UnitResultsService {
     const rawData = await this.unitResultsRepository.find({
       where: { product: { productName } },
       relations: ['product'],
+      order: { date: 'DESC' },
     });
 
     // Group the results by pull_request
@@ -56,10 +58,10 @@ export class UnitResultsService {
           date: item.date,
           commit: item.commit,
           percentage: item.percentage,
-          statement_coverage: item.statement_coverage,
-          function_coverage: item.function_coverage,
-          branch_coverage: item.branch_coverage,
-          line_coverage: item.line_coverage,
+          statementCoverage: item.statementCoverage,
+          functionCoverage: item.functionCoverage,
+          branchCoverage: item.branchCoverage,
+          lineCoverage: item.lineCoverage,
           author: item.author,
         });
       } else {
@@ -73,10 +75,10 @@ export class UnitResultsService {
               date: item.date,
               commit: item.commit,
               percentage: item.percentage,
-              statement_coverage: item.statement_coverage,
-              function_coverage: item.function_coverage,
-              branch_coverage: item.branch_coverage,
-              line_coverage: item.line_coverage,
+              statementCoverage: item.statementCoverage,
+              functionCoverage: item.functionCoverage,
+              branchCoverage: item.branchCoverage,
+              lineCoverage: item.lineCoverage,
               author: item.author,
             },
           ],

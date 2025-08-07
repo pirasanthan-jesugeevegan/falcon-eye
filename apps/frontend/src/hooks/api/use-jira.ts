@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query-keys';
 import { apiClient, handleApiError } from '@/lib/api-client';
-import type { JiraConfig } from '@/types';
+import type { JiraAllIssuesResponse, JiraConfig, JiraIssue } from '@/types';
 import { toast } from 'sonner';
 
 // Define the JiraQuery type that was missing
@@ -45,7 +45,8 @@ export const jiraApi = {
   deleteQuery: (id: string): Promise<void> =>
     apiClient.delete(`/jira/query/${id}`),
 
-  getExecuteQuery: (id: string): Promise<{ issues: unknown[] }> =>
+  // Update the getExecuteQuery function to return properly typed issues
+  getExecuteQuery: (id: string): Promise<{ issues: JiraIssue[] }> =>
     apiClient.get(`/jira/query/${id}/execute`),
 };
 
@@ -227,8 +228,8 @@ export const useExecuteJiraQuery = (id: string) => {
 
 export const useAllJiraIssues = () => {
   return useQuery({
-    queryKey: queryKeys.jira.all, // You can customize this key
-    queryFn: async () => {
+    queryKey: queryKeys.jira.all,
+    queryFn: async (): Promise<JiraAllIssuesResponse> => {
       const queries = await jiraApi.getQueries();
 
       const results = await Promise.all(
@@ -241,8 +242,8 @@ export const useAllJiraIssues = () => {
         }),
       );
 
-      return { results: results.flat(), queries: queries };
+      return { results, queries } as unknown as JiraAllIssuesResponse;
     },
-    staleTime: 5 * 60 * 1000, // optional: cache for 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };
