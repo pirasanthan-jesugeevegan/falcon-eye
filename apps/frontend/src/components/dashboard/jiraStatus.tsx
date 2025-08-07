@@ -40,6 +40,14 @@ export function JiraStatus({
                 description={`Number of issues: ${query.issues.length}`}
               />
             ))}
+            {issues?.results?.length === 0 && (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">No issues found</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Configure Jira queries to see issue distribution
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
