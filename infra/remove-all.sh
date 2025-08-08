@@ -42,6 +42,8 @@ if sst remove --stage "$STAGE"; then
 fi
 
 echo "⚠️ SST remove failed. Proceeding with manual cleanup..."
+echo "⚠️  Note: Manual cleanup may cause Pulumi state to become out of sync."
+echo "⚠️  Run 'sst refresh --stage $STAGE' after cleanup if you encounter deployment issues."
 
 # RDS
 echo "📋 Step 2: RDS instances"
@@ -89,7 +91,9 @@ fi
 
 # NAT Gateways
 echo "📋 Step 5: NAT Gateways"
-NAT_IDS=$(aws ec2 describe-nat-gateways --query "NatGateways[?State!='deleted'].NatGatewayId" --output text 2>/dev/null || echo "")
+NAT_IDS=$(aws ec2 describe-nat-gateways \
+  --query "NatGateways[?State!='deleted' && contains(Tags[?Key=='sst:app'].Value, '${STACK_NAME}') && contains(Tags[?Key=='sst:stage'].Value, '${STAGE}')].NatGatewayId" \
+  --output text 2>/dev/null || echo "")
 if [ -n "$NAT_IDS" ]; then
   for nat in $NAT_IDS; do
     echo "Deleting NAT Gateway: $nat"
@@ -173,36 +177,57 @@ if [ -n "$VPCS" ]; then
   for vpc in $VPCS; do
     echo "Cleaning VPC: $vpc"
 
-    # Subnets
-    SUBNETS=$(aws ec2 describe-subnets --filters Name=vpc-id,Values="$vpc" --query "Subnets[].SubnetId" --output text 2>/dev/null || echo "")
-    for subnet in $SUBNETS; do 
-      echo "Deleting subnet: $subnet"
-      aws ec2 delete-subnet --subnet-id "$subnet" || true
-    done
+         # Subnets
+     SUBNETS=$(aws ec2 describe-subnets --filters Name=vpc-id,Values="$vpc" --query "Subnets[].SubnetId" --output text 2>/dev/null || echo "")
+     for subnet in $SUBNETS; do 
+       echo "Deleting subnet: $subnet"
+       
+       # Check if subnet has dependencies
+       DEPENDENCIES=$(aws ec2 describe-subnets --subnet-ids "$subnet" --query "Subnets[0].State" --output text 2>/dev/null || echo "")
+       if [ "$DEPENDENCIES" = "available" ]; then
+         aws ec2 delete-subnet --subnet-id "$subnet" || true
+       else
+         echo "Subnet $subnet has dependencies, skipping for now..."
+       fi
+     done
 
-    # Internet Gateways
-    IGWS=$(aws ec2 describe-internet-gateways \
-      --filters Name=attachment.vpc-id,Values="$vpc" --query "InternetGateways[].InternetGatewayId" --output text 2>/dev/null || echo "")
-    for igw in $IGWS; do
-      echo "Detaching and deleting Internet Gateway: $igw"
-      aws ec2 detach-internet-gateway --internet-gateway-id "$igw" --vpc-id "$vpc" || true
-      aws ec2 delete-internet-gateway --internet-gateway-id "$igw" || true
-    done
+         # Internet Gateways
+     IGWS=$(aws ec2 describe-internet-gateways \
+       --filters Name=attachment.vpc-id,Values="$vpc" --query "InternetGateways[].InternetGatewayId" --output text 2>/dev/null || echo "")
+     for igw in $IGWS; do
+       echo "Processing Internet Gateway: $igw"
+       
+       # Check if Internet Gateway still exists
+       if aws ec2 describe-internet-gateways --internet-gateway-ids "$igw" >/dev/null 2>&1; then
+         echo "Detaching Internet Gateway: $igw"
+         aws ec2 detach-internet-gateway --internet-gateway-id "$igw" --vpc-id "$vpc" || true
+         
+         echo "Deleting Internet Gateway: $igw"
+         aws ec2 delete-internet-gateway --internet-gateway-id "$igw" || true
+       else
+         echo "Internet Gateway $igw no longer exists, skipping..."
+       fi
+     done
 
-    # Route Tables - Detach associations first
-    RTBS=$(aws ec2 describe-route-tables --filters Name=vpc-id,Values="$vpc" --query "RouteTables[].RouteTableId" --output text 2>/dev/null || echo "")
-    for rtb in $RTBS; do
-      echo "Processing route table: $rtb"
-      ASSOCIATIONS=$(aws ec2 describe-route-tables --route-table-ids "$rtb" --query "RouteTables[0].Associations" 2>/dev/null || echo "[]")
-      for assoc in $(echo "$ASSOCIATIONS" | jq -r '.[] | .AssociationId' 2>/dev/null || echo ""); do
-        if [ -n "$assoc" ]; then
-          echo "Disassociating route table association: $assoc"
-          aws ec2 disassociate-route-table --association-id "$assoc" || true
-        fi
-      done
-      echo "Deleting route table: $rtb"
-      aws ec2 delete-route-table --route-table-id "$rtb" || true
-    done
+         # Route Tables - Detach associations first
+     RTBS=$(aws ec2 describe-route-tables --filters Name=vpc-id,Values="$vpc" --query "RouteTables[].RouteTableId" --output text 2>/dev/null || echo "")
+     for rtb in $RTBS; do
+       echo "Processing route table: $rtb"
+       
+       # Get associations and filter out null values
+       ASSOCIATIONS=$(aws ec2 describe-route-tables --route-table-ids "$rtb" --query "RouteTables[0].Associations[?AssociationId!=null].AssociationId" --output text 2>/dev/null || echo "")
+       if [ -n "$ASSOCIATIONS" ]; then
+         for assoc in $ASSOCIATIONS; do
+           echo "Disassociating route table association: $assoc"
+           aws ec2 disassociate-route-table --association-id "$assoc" || true
+         done
+       else
+         echo "No valid associations found for route table $rtb"
+       fi
+       
+       echo "Deleting route table: $rtb"
+       aws ec2 delete-route-table --route-table-id "$rtb" || true
+     done
 
     # Security groups (not default)
     SGROUPS=$(aws ec2 describe-security-groups --filters Name=vpc-id,Values="$vpc" --query "SecurityGroups[?GroupName!='default'].GroupId" --output text 2>/dev/null || echo "")
@@ -218,12 +243,40 @@ if [ -n "$VPCS" ]; then
       aws ec2 delete-vpc-endpoints --vpc-endpoint-ids "$ep" || true
     done
 
-    # Finally delete the VPC
-    echo "Deleting VPC: $vpc"
+         # Finally delete the VPC
+     echo "Deleting VPC: $vpc"
+     aws ec2 delete-vpc --vpc-id "$vpc" || true
+   done
+ else
+   echo "No VPCs found to delete."
+ fi
+
+# Final VPC cleanup - try to delete any remaining resources
+echo "📋 Step 9.5: Final VPC cleanup"
+VPCS=$(aws ec2 describe-vpcs \
+  --filters "Name=tag:Name,Values=*${STACK_NAME}*" --query "Vpcs[].VpcId" --output text 2>/dev/null || echo "")
+if [ -n "$VPCS" ]; then
+  for vpc in $VPCS; do
+    echo "Final cleanup for VPC: $vpc"
+    
+    # Try to delete any remaining subnets
+    REMAINING_SUBNETS=$(aws ec2 describe-subnets --filters Name=vpc-id,Values="$vpc" --query "Subnets[].SubnetId" --output text 2>/dev/null || echo "")
+    for subnet in $REMAINING_SUBNETS; do
+      echo "Final attempt to delete subnet: $subnet"
+      aws ec2 delete-subnet --subnet-id "$subnet" || true
+    done
+    
+    # Try to delete any remaining route tables
+    REMAINING_RTBS=$(aws ec2 describe-route-tables --filters Name=vpc-id,Values="$vpc" --query "RouteTables[].RouteTableId" --output text 2>/dev/null || echo "")
+    for rtb in $REMAINING_RTBS; do
+      echo "Final attempt to delete route table: $rtb"
+      aws ec2 delete-route-table --route-table-id "$rtb" || true
+    done
+    
+    # Final VPC deletion attempt
+    echo "Final attempt to delete VPC: $vpc"
     aws ec2 delete-vpc --vpc-id "$vpc" || true
   done
-else
-  echo "No VPCs found to delete."
 fi
 
 # CloudWatch Logs
@@ -280,6 +333,32 @@ fi
 
 # Final cleanup
 echo "📋 Step 14: Final SST remove retry"
-sst remove --stage "$STAGE" || true
+echo "Checking if SST resources still exist before attempting final remove..."
+
+# Check if there are any remaining SST-managed resources
+REMAINING_RESOURCES=$(aws resourcegroupstaggingapi get-resources \
+  --tag-filters Key=sst:app,Values="$STACK_NAME" Key=sst:stage,Values="$STAGE" \
+  --query "ResourceTagMappingList[].ResourceARN" --output text 2>/dev/null || echo "")
+
+if [ -n "$REMAINING_RESOURCES" ]; then
+  echo "Found remaining SST resources, attempting final remove..."
+  sst remove --stage "$STAGE" || true
+else
+  echo "No remaining SST resources found, skipping final remove."
+fi
+
+# Refresh SST state to sync with AWS reality
+echo "📋 Step 15: Refreshing SST state"
+echo "Syncing Pulumi state with actual AWS resources..."
+sst refresh --stage "$STAGE" || true
+
+# Final SST remove attempt after refresh
+echo "📋 Step 16: Final SST remove after refresh"
+echo "Attempting final SST remove with clean state..."
+if sst remove --stage "$STAGE"; then
+  echo "✅ Final SST remove completed successfully."
+else
+  echo "⚠️ Final SST remove failed, but resources should be cleaned up."
+fi
 
 echo "✅ All done. Manual cleanup complete."

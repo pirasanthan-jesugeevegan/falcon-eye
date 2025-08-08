@@ -18,7 +18,6 @@ export function JiraPage() {
 
   const { data, isLoading, error } = useExecuteJiraQuery(jiraId);
   const { data: queryData } = useJiraQuery(jiraId);
-  console.log(data);
 
   // Update the reshaped data type to match the actual data structure
   const reshaped = useMemo(() => {
@@ -74,7 +73,14 @@ export function JiraPage() {
       accessorKey: 'key',
       header: 'Jira Number',
       cell: ({ row }) => (
-        <div className="flex items-center">{row.getValue('key')}</div>
+        <a
+          href={`${queryData?.jiraConfig?.baseUrl}/browse/${row.getValue('key')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:underline"
+        >
+          {row.getValue('key')}
+        </a>
       ),
     },
     {
@@ -83,7 +89,14 @@ export function JiraPage() {
       accessorFn: row => row.summary,
       cell: ({ row }) => (
         <div className="flex items-center">
-          <div className="font-medium">{row.getValue('summary')}</div>
+          <a
+            href={`${queryData?.jiraConfig?.baseUrl}/browse/${row.getValue('key')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline"
+          >
+            <div className="font-medium">{row.getValue('summary')}</div>
+          </a>
         </div>
       ),
     },

@@ -121,9 +121,9 @@ export function DashboardPage() {
           <OverviewCard
             title="Failed E2E Tests"
             value={failedE2ETests}
-            description={`${failedE2EPercentage.toFixed(1)}% of ${totalE2ETests} total E2E tests`}
+            description={`${failedE2EPercentage.toFixed(0)}% of ${totalE2ETests} total E2E tests`}
             change={{
-              value: failedE2EPercentage,
+              value: Number(failedE2EPercentage.toFixed(0)),
               type: failedE2EPercentage > 10 ? 'increase' : 'decrease',
             }}
             icon={<XCircle className="h-5 w-5" />}

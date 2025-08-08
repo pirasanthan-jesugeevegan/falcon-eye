@@ -54,7 +54,7 @@ export interface E2ETestResult {
   fail: number;
   skip: number;
   duration: string;
-  report_url: string;
+  reportUrl: string;
   tag: string;
   environment: string;
 }

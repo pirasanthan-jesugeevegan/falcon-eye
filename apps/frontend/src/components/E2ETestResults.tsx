@@ -39,30 +39,45 @@ export default function E2ETestResults({
       accessorKey: 'timestamp',
       header: 'Date',
       cell: ({ row }) => (
-        <div className="flex items-center text-xs text-muted-foreground">
+        <a
+          href={row.original.reportUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center text-xs text-muted-foreground"
+        >
           <Calendar className="mr-1 h-3 w-3" />
           {dateFormat(row.getValue('timestamp'))}
-        </div>
+        </a>
       ),
     },
     {
       accessorKey: 'duration',
       header: 'Duration',
       cell: ({ row }) => (
-        <div className="flex items-center text-sm">
+        <a
+          href={row.original.reportUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center text-sm"
+        >
           <Clock className="mr-1 h-3 w-3 text-muted-foreground" />
           {row.getValue('duration')}
-        </div>
+        </a>
       ),
     },
     {
       accessorKey: 'environment',
       header: 'Environment',
       cell: ({ row }) => (
-        <div className="flex items-center text-sm">
+        <a
+          href={row.original.reportUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center text-sm"
+        >
           <Laptop className="mr-1 h-4 w-4 text-muted-foreground" />
           {row.getValue('environment')}
-        </div>
+        </a>
       ),
     },
     {
