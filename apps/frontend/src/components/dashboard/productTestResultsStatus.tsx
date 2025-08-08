@@ -18,6 +18,7 @@ import { Progress } from '../ui/progress';
 import { useTestResults } from '@/hooks/api/use-test-results';
 import DynamicHeroIcon from '@/components/ui/dynamicIcon';
 import * as HIcons from '@heroicons/react/24/solid';
+import { Link } from '@tanstack/react-router';
 
 export function ProductTestResultsStatus({
   products,
@@ -107,8 +108,8 @@ function ProductStatusRow({ product }: { product: any }) {
     ? parseFloat(latestUnitResult.percentage)
     : 0;
 
-  return (
-    <TableRow>
+  const rowContent = (
+    <TableRow className="hover:bg-muted/50 transition-colors cursor-pointer">
       <TableCell>
         <div className="flex items-center gap-2">
           {product.icon ? (
@@ -153,4 +154,18 @@ function ProductStatusRow({ product }: { product: any }) {
       </TableCell>
     </TableRow>
   );
+
+  if (product.id) {
+    return (
+      <Link
+        to="/products/$productId"
+        params={{ productId: product.id }}
+        className="block"
+      >
+        {rowContent}
+      </Link>
+    );
+  }
+
+  return rowContent;
 }

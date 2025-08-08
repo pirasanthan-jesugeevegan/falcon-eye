@@ -12,6 +12,7 @@ export interface JiraQuery {
   jqlQuery: string;
   description?: string;
   isActive: boolean;
+  jiraConfig: JiraConfig;
 }
 
 // API functions

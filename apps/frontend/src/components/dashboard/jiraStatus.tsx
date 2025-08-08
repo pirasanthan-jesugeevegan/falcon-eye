@@ -6,6 +6,7 @@ import {
 } from '@/components/ui/tooltip';
 import { HelpCircle } from 'lucide-react';
 import * as HIcons from '@heroicons/react/24/solid';
+import { Link } from '@tanstack/react-router';
 import type { JiraAllIssuesResponse } from '@/types';
 
 export function JiraStatus({
@@ -32,14 +33,38 @@ export function JiraStatus({
       <div className="rounded-lg border bg-card text-card-foreground shadow-lg">
         <div className="p-6">
           <div className="space-y-4">
-            {issues?.results?.map((query, i) => (
-              <ActivityItem
-                key={i}
-                icon={<HIcons.BugAntIcon className="h-5 w-5" />}
-                title={query.queryName}
-                description={`Number of issues: ${query.issues.length}`}
-              />
-            ))}
+            {issues?.results?.map((query, i) => {
+              // Find the corresponding query to get the ID for navigation
+              const correspondingQuery = issues?.queries?.find(
+                q => q.name === query.queryName,
+              );
+
+              const rowContent = (
+                <div className="hover:bg-muted/50 transition-colors rounded-lg p-2 cursor-pointer">
+                  <ActivityItem
+                    icon={<HIcons.BugAntIcon className="h-5 w-5" />}
+                    title={query.queryName}
+                    description={`Number of issues: ${query.issues.length}`}
+                  />
+                </div>
+              );
+
+              return (
+                <div key={i}>
+                  {correspondingQuery?.id ? (
+                    <Link
+                      to="/jira/$jiraId"
+                      params={{ jiraId: correspondingQuery.id }}
+                      className="block"
+                    >
+                      {rowContent}
+                    </Link>
+                  ) : (
+                    rowContent
+                  )}
+                </div>
+              );
+            })}
             {issues?.results?.length === 0 && (
               <div className="text-center py-4">
                 <p className="text-sm text-muted-foreground">No issues found</p>

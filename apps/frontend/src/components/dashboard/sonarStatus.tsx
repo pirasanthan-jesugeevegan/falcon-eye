@@ -6,6 +6,7 @@ import {
 } from '@/components/ui/tooltip';
 import { CheckCircle, HelpCircle } from 'lucide-react';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { Link } from '@tanstack/react-router';
 import type { SonarCloudIssue } from '@/types';
 
 export function SonarStatus({
@@ -43,11 +44,13 @@ export function SonarStatus({
 
             const isOK = status === 'OK' || status === 'PASSED';
 
-            return (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 border rounded-lg"
-              >
+            // Find the corresponding query to get the ID for navigation
+            const correspondingQuery = sonarCloudData?.queries?.find(
+              query => query.name === project.queryName,
+            );
+
+            const rowContent = (
+              <div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
                 <div className="flex items-center gap-2">
                   <CheckCircle
                     className={`h-4 w-4 ${
@@ -61,6 +64,22 @@ export function SonarStatus({
                 <StatusBadge status={isOK ? 'healthy' : 'critical'}>
                   {status}
                 </StatusBadge>
+              </div>
+            );
+
+            return (
+              <div key={index}>
+                {correspondingQuery?.id ? (
+                  <Link
+                    to="/sonarcloud/$sonarCloudId"
+                    params={{ sonarCloudId: correspondingQuery.id }}
+                    className="block"
+                  >
+                    {rowContent}
+                  </Link>
+                ) : (
+                  rowContent
+                )}
               </div>
             );
           })}

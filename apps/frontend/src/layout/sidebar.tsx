@@ -85,14 +85,14 @@ export function Sidebar() {
             : 'translate-x-0',
         )}
       >
-        <div className="px-4 py-6">
+        <div className="py-6">
           <h1 className="text-2xl font-bold mb-6 px-3">Falcon Eye</h1>
           {isLoading || isJiraLoading || isSonarCloudLoading ? (
             <div className="flex items-center justify-center h-20">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
           ) : (
-            <ScrollArea className="h-[calc(100vh-140px)]">
+            <ScrollArea className="h-[calc(100vh-140px)] px-4 ">
               <div className="space-y-1">
                 <Link
                   to="/"
