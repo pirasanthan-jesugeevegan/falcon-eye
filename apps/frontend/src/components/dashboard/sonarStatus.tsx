@@ -71,7 +71,7 @@ export function SonarStatus({
               <div key={index}>
                 {correspondingQuery?.id ? (
                   <Link
-                    to="/sonarcloud/$sonarCloudId"
+                    to="/sonarCloud/$sonarCloudId"
                     params={{ sonarCloudId: correspondingQuery.id }}
                     className="block"
                   >

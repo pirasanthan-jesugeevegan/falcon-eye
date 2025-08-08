@@ -150,7 +150,7 @@ export function Sidebar() {
                         name: query.name,
                         isActive: query.isActive,
                       }))}
-                      basePath="/sonarcloud"
+                      basePath="/sonarCloud"
                       showActiveOnly={true}
                     />
                   )}
