@@ -3,7 +3,7 @@ import { Link, useLocation } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlignJustify, LayoutDashboard, X } from 'lucide-react';
+import { AlignJustify, Github, LayoutDashboard, X } from 'lucide-react';
 import { SidebarSection } from '@/components/ui/sidebar-section';
 import { useJiraQueries, useProducts, useSonarCloudQueries } from '@/hooks/api';
 
@@ -105,6 +105,16 @@ export function Sidebar() {
                   Dashboard
                 </Link>
 
+                <Link
+                  to="/githubWorkflow"
+                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors hover:bg-primary/20 hover:text-primary"
+                  activeProps={{
+                    className: 'bg-primary/20 text-primary',
+                  }}
+                >
+                  <Github />
+                  GitHub Workflow
+                </Link>
                 {/* Products */}
                 {products.length > 0 && (
                   <SidebarSection

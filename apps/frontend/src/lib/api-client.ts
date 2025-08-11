@@ -5,6 +5,7 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/';
 
 export interface ApiError extends Error {
+  [x: string]: any;
   status?: number;
   code?: string;
 }
@@ -108,7 +109,11 @@ export const handleApiError = (error: unknown) => {
     }
 
     // Show user-friendly error messages
-    toast.error(apiError.message || 'An unexpected error occurred');
+    toast.error(
+      apiError.message ||
+        apiError.githubApiResponse?.error?.message ||
+        'An unexpected error occurred',
+    );
   }
 
   console.error('API Error:', error);
