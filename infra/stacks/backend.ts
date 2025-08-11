@@ -15,6 +15,7 @@ export function createBackendStack(db: sst.aws.Postgres, vpc: sst.aws.Vpc) {
       DB_USERNAME: db.username,
       DB_PASSWORD: db.password,
       DB_NAME: db.database,
+      ENCRYPTION_KEY: 'rJ8/xQ2K9mN5vP7wB3fC8dE6gH1iL4mO7qR9sT2uV5x=',
     },
     url: {
       cors: {
