@@ -93,7 +93,7 @@ export function DashboardPage() {
 
   return (
     <TooltipProvider>
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="container mx-auto md:p-6 space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Overview</h1>
           <p className="text-muted-foreground">
@@ -108,7 +108,9 @@ export function DashboardPage() {
             title="Open Issues"
             value={totalIssues}
             description="Total Jira issues across all queries"
-            icon={<HIcons.BugAntIcon className="h-5 w-5" />}
+            icon={<HIcons.BugAntIcon className="h-8 w-8" />}
+            borderColor="border-l-blue-500"
+            iconColor="text-blue-500"
           />
           <OverviewCard
             title="Test Coverage"
@@ -116,7 +118,9 @@ export function DashboardPage() {
               calculateAverageTestCoverage(allUnitResults.data || []),
             )}
             description={`Average unit test coverage across ${allUnitResults.data?.length || 0} products`}
-            icon={<HIcons.ChartBarIcon className="h-5 w-5" />}
+            icon={<HIcons.ChartBarIcon className="h-8 w-8" />}
+            borderColor="border-l-green-500"
+            iconColor="text-green-500"
           />
           <OverviewCard
             title="Failed E2E Tests"
@@ -126,13 +130,17 @@ export function DashboardPage() {
               value: Number(failedE2EPercentage.toFixed(0)),
               type: failedE2EPercentage > 10 ? 'increase' : 'decrease',
             }}
-            icon={<XCircle className="h-5 w-5" />}
+            icon={<XCircle className="h-8 w-8" />}
+            borderColor="border-l-red-500"
+            iconColor="text-red-500"
           />
           <OverviewCard
             title="Recent Activity"
             value={products?.length ?? 0}
             description="Products with recent updates"
-            icon={<Activity className="h-5 w-5" />}
+            icon={<Activity className="h-8 w-8" />}
+            borderColor="border-l-yellow-500"
+            iconColor="text-yellow-500"
           />
         </div>
 

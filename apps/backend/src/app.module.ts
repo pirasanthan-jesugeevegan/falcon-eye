@@ -14,6 +14,8 @@ import { JiraConfig } from './modules/jira/entities/jira-config.entity';
 import { JiraQuery } from './modules/jira/entities/jira-query.entity';
 import { SonarCloudConfig } from './modules/sonarcloud/entities/sonarcloud-config.entity';
 import { SonarCloudQuery } from './modules/sonarcloud/entities/sonarcloud-query.entity';
+import { GithubModule } from './modules/github/github.module';
+import { GithubConfig } from './modules/github/entities/github-config.entity';
 
 @Module({
   imports: [
@@ -38,6 +40,7 @@ import { SonarCloudQuery } from './modules/sonarcloud/entities/sonarcloud-query.
           JiraQuery,
           SonarCloudConfig,
           SonarCloudQuery,
+          GithubConfig,
         ],
         synchronize: true,
         migrations: [join(__dirname, 'database', 'migrations', '*.{ts,js}')],
@@ -53,6 +56,7 @@ import { SonarCloudQuery } from './modules/sonarcloud/entities/sonarcloud-query.
     UnitResultsModule,
     JiraModule,
     SonarCloudModule,
+    GithubModule,
   ],
 })
 export class AppModule {}

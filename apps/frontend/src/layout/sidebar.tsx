@@ -3,9 +3,14 @@ import { Link, useLocation } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AlignJustify, LayoutDashboard, X } from 'lucide-react';
+import { AlignJustify, Github, LayoutDashboard, X } from 'lucide-react';
 import { SidebarSection } from '@/components/ui/sidebar-section';
-import { useJiraQueries, useProducts, useSonarCloudQueries } from '@/hooks/api';
+import {
+  useGithubConfig,
+  useJiraQueries,
+  useProducts,
+  useSonarCloudQueries,
+} from '@/hooks/api';
 
 export function Sidebar() {
   const [isMobile, setIsMobile] = useState(false);
@@ -15,6 +20,7 @@ export function Sidebar() {
   const { data: jira = [], isLoading: isJiraLoading } = useJiraQueries();
   const { data: sonarCloud = [], isLoading: isSonarCloudLoading } =
     useSonarCloudQueries();
+  const { data: github = [], isLoading: isGithubLoading } = useGithubConfig();
 
   useEffect(() => {
     // Check if mobile
@@ -87,7 +93,10 @@ export function Sidebar() {
       >
         <div className="py-6">
           <h1 className="text-2xl font-bold mb-6 px-3">Falcon Eye</h1>
-          {isLoading || isJiraLoading || isSonarCloudLoading ? (
+          {isLoading ||
+          isJiraLoading ||
+          isSonarCloudLoading ||
+          isGithubLoading ? (
             <div className="flex items-center justify-center h-20">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
@@ -104,7 +113,19 @@ export function Sidebar() {
                   <LayoutDashboard />
                   Dashboard
                 </Link>
-
+                {/* GitHub Workflow */}
+                {github.length > 0 && (
+                  <Link
+                    to="/githubWorkflow"
+                    className="flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors hover:bg-primary/20 hover:text-primary"
+                    activeProps={{
+                      className: 'bg-primary/20 text-primary',
+                    }}
+                  >
+                    <Github />
+                    GitHub Workflow
+                  </Link>
+                )}
                 {/* Products */}
                 {products.length > 0 && (
                   <SidebarSection

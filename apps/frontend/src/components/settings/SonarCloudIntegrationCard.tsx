@@ -31,7 +31,8 @@ export function SonarCloudIntegrationCard() {
       <CardHeader>
         <CardTitle>SonarCloud Integration</CardTitle>
         <CardDescription>
-          Configure SonarCloud integration to sync issues with your dashboard.
+          Configure SonarCloud integration to view quality gates and metrics
+          with your dashboard.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

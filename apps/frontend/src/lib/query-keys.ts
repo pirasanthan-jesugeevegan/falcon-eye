@@ -44,6 +44,16 @@ export const queryKeys = {
     executeQuery: (id: string) =>
       [...queryKeys.sonarCloud.all, 'execute', id] as const,
   },
+
+  // GitHub Workflow
+  github: {
+    all: ['github'] as const,
+    config: () => [...queryKeys.github.all, 'config'] as const,
+    workflowRuns: (configId: string) =>
+      [...queryKeys.github.all, 'workflowRuns', configId] as const,
+    workflowRunStatus: (configId: string, runId: string) =>
+      [...queryKeys.github.all, 'workflowRunStatus', configId, runId] as const,
+  },
 } as const;
 
 // Helper function to invalidate related queries
