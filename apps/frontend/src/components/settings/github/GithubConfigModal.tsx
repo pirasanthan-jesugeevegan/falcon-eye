@@ -133,7 +133,13 @@ export function GithubConfigModal({
         repo: '',
         workflow: '',
         pat: '',
-        inputsSchema: [],
+        inputsSchema: [
+          {
+            name: '',
+            type: 'string' as const,
+            options: [{ value: '', label: '' }],
+          },
+        ],
         defaultRef: 'main',
       });
     }
@@ -336,173 +342,181 @@ export function GithubConfigModal({
                 </Button>
               </div>
 
-              <Accordion type="single" collapsible className="space-y-2">
-                {fields.map((field, index) => (
-                  <AccordionItem
-                    key={field.id}
-                    value={`input-${index}`}
-                    className="border rounded-lg"
-                  >
-                    <AccordionTrigger className="px-3 py-2 hover:no-underline">
-                      <div className="flex justify-between items-center w-full pr-4">
-                        <span className="text-sm font-medium">
-                          {configForm.watch(`inputsSchema.${index}.name`) ||
-                            `Input ${index + 1}`}
-                        </span>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={e => {
-                            e.stopPropagation();
-                            remove(index);
-                          }}
-                          disabled={fields.length === 1}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-3 pb-3 space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <FormField
-                          control={configForm.control}
-                          name={`inputsSchema.${index}.name`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm">Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="env" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={configForm.control}
-                          name={`inputsSchema.${index}.type`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm">Type</FormLabel>
-                              <Select
-                                onValueChange={field.onChange}
-                                value={field.value}
-                              >
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Type" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="string">String</SelectItem>
-                                  <SelectItem value="select">Select</SelectItem>
-                                  <SelectItem value="boolean">
-                                    Boolean
-                                  </SelectItem>
-                                  <SelectItem value="number">Number</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      {/* Options for select type only */}
-                      {configForm.watch(`inputsSchema.${index}.type`) ===
-                        'select' && (
-                        <div className="space-y-2">
-                          <FormLabel className="text-sm">
-                            Options (value: label)
-                          </FormLabel>
-                          {configForm
-                            .watch(`inputsSchema.${index}.options`)
-                            ?.map((option, optionIndex) => (
-                              <div key={optionIndex} className="flex gap-2">
-                                <Input
-                                  placeholder="dev"
-                                  value={option.value}
-                                  onChange={e => {
-                                    const currentOptions =
-                                      configForm.getValues(
-                                        `inputsSchema.${index}.options`,
-                                      ) || [];
-                                    currentOptions[optionIndex].value =
-                                      e.target.value;
-                                    configForm.setValue(
-                                      `inputsSchema.${index}.options`,
-                                      currentOptions,
-                                    );
-                                  }}
-                                />
-                                <Input
-                                  placeholder="Development"
-                                  value={option.label}
-                                  onChange={e => {
-                                    const currentOptions =
-                                      configForm.getValues(
-                                        `inputsSchema.${index}.options`,
-                                      ) || [];
-                                    currentOptions[optionIndex].label =
-                                      e.target.value;
-                                    configForm.setValue(
-                                      `inputsSchema.${index}.options`,
-                                      currentOptions,
-                                    );
-                                  }}
-                                />
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    const currentOptions =
-                                      configForm.getValues(
-                                        `inputsSchema.${index}.options`,
-                                      ) || [];
-                                    const newOptions = currentOptions.filter(
-                                      (_, i) => i !== optionIndex,
-                                    );
-                                    configForm.setValue(
-                                      `inputsSchema.${index}.options`,
-                                      newOptions,
-                                    );
-                                  }}
-                                  disabled={
-                                    configForm.watch(
-                                      `inputsSchema.${index}.options`,
-                                    )?.length === 1
-                                  }
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ))}
+              <div className="max-h-[300px] overflow-y-auto border rounded-lg p-2">
+                <Accordion type="single" collapsible className="space-y-2">
+                  {fields.map((field, index) => (
+                    <AccordionItem
+                      key={field.id}
+                      value={`input-${index}`}
+                      className="border rounded-lg"
+                    >
+                      <AccordionTrigger className="px-3 py-2 hover:no-underline">
+                        <div className="flex justify-between items-center w-full pr-4">
+                          <span className="text-sm font-medium">
+                            {configForm.watch(`inputsSchema.${index}.name`) ||
+                              `Input ${index + 1}`}
+                          </span>
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              const currentOptions =
-                                configForm.getValues(
-                                  `inputsSchema.${index}.options`,
-                                ) || [];
-                              configForm.setValue(
-                                `inputsSchema.${index}.options`,
-                                [...currentOptions, { value: '', label: '' }],
-                              );
+                            onClick={e => {
+                              e.stopPropagation();
+                              remove(index);
                             }}
+                            disabled={fields.length === 1}
                           >
-                            <Plus className="h-4 w-4 mr-1" />
-                            Add Option
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                      )}
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-3 pb-3 space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <FormField
+                            control={configForm.control}
+                            name={`inputsSchema.${index}.name`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm">Name</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="env" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={configForm.control}
+                            name={`inputsSchema.${index}.type`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm">Type</FormLabel>
+                                <Select
+                                  onValueChange={field.onChange}
+                                  value={field.value}
+                                >
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Type" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="string">
+                                      String
+                                    </SelectItem>
+                                    <SelectItem value="select">
+                                      Select
+                                    </SelectItem>
+                                    <SelectItem value="boolean">
+                                      Boolean
+                                    </SelectItem>
+                                    <SelectItem value="number">
+                                      Number
+                                    </SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        {/* Options for select type only */}
+                        {configForm.watch(`inputsSchema.${index}.type`) ===
+                          'select' && (
+                          <div className="space-y-2">
+                            <FormLabel className="text-sm">
+                              Options (value: label)
+                            </FormLabel>
+                            {configForm
+                              .watch(`inputsSchema.${index}.options`)
+                              ?.map((option, optionIndex) => (
+                                <div key={optionIndex} className="flex gap-2">
+                                  <Input
+                                    placeholder="dev"
+                                    value={option.value}
+                                    onChange={e => {
+                                      const currentOptions =
+                                        configForm.getValues(
+                                          `inputsSchema.${index}.options`,
+                                        ) || [];
+                                      currentOptions[optionIndex].value =
+                                        e.target.value;
+                                      configForm.setValue(
+                                        `inputsSchema.${index}.options`,
+                                        currentOptions,
+                                      );
+                                    }}
+                                  />
+                                  <Input
+                                    placeholder="Development"
+                                    value={option.label}
+                                    onChange={e => {
+                                      const currentOptions =
+                                        configForm.getValues(
+                                          `inputsSchema.${index}.options`,
+                                        ) || [];
+                                      currentOptions[optionIndex].label =
+                                        e.target.value;
+                                      configForm.setValue(
+                                        `inputsSchema.${index}.options`,
+                                        currentOptions,
+                                      );
+                                    }}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      const currentOptions =
+                                        configForm.getValues(
+                                          `inputsSchema.${index}.options`,
+                                        ) || [];
+                                      const newOptions = currentOptions.filter(
+                                        (_, i) => i !== optionIndex,
+                                      );
+                                      configForm.setValue(
+                                        `inputsSchema.${index}.options`,
+                                        newOptions,
+                                      );
+                                    }}
+                                    disabled={
+                                      configForm.watch(
+                                        `inputsSchema.${index}.options`,
+                                      )?.length === 1
+                                    }
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const currentOptions =
+                                  configForm.getValues(
+                                    `inputsSchema.${index}.options`,
+                                  ) || [];
+                                configForm.setValue(
+                                  `inputsSchema.${index}.options`,
+                                  [...currentOptions, { value: '', label: '' }],
+                                );
+                              }}
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add Option
+                            </Button>
+                          </div>
+                        )}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </div>
             </div>
 
             <DialogFooter>
