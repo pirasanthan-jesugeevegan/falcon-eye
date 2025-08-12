@@ -161,6 +161,7 @@ function ProductStatusRow({ product }: { product: any }) {
         to="/products/$productId"
         params={{ productId: product.id }}
         className="block"
+        style={{ display: 'contents' }}
       >
         {rowContent}
       </Link>
