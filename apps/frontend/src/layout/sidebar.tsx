@@ -70,7 +70,7 @@ export function Sidebar() {
           size="icon"
           className={cn(
             'fixed z-50 md:hidden',
-            isOpen ? 'top-6 left-50' : 'top-6 left-4',
+            isOpen ? 'top-6 left-52' : 'top-6 left-4',
           )}
           onClick={toggleSidebar}
         >
@@ -92,7 +92,9 @@ export function Sidebar() {
         )}
       >
         <div className="py-6">
-          <h1 className="text-2xl font-bold mb-6 px-3">Falcon Eye</h1>
+          <h1 className="text-4xl font-bold mb-6 px-3 md:text-center">
+            Falcon Eye
+          </h1>
           {isLoading ||
           isJiraLoading ||
           isSonarCloudLoading ||

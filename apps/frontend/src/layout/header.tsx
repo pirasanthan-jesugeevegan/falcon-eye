@@ -1,14 +1,5 @@
 import { Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ModeToggle } from '@/components/mode-toggle';
 import { Settings } from 'lucide-react';
 
@@ -17,9 +8,9 @@ export function Header() {
     <header className="sticky top-0 z-30 flex h-20 w-full items-center bg-background backdrop-blur supports-[backdrop-filter]:bg-background">
       <div className="container flex items-center justify-end">
         <div className="flex items-center gap-2 mr-8">
+          {/* Mode Toggle */}
           <ModeToggle />
-
-          {/* Settings Gear Icon */}
+          {/* Settings Button */}
           <Link to="/settings">
             <Button
               variant="outline"
@@ -29,8 +20,8 @@ export function Header() {
               <Settings />
             </Button>
           </Link>
-
-          <DropdownMenu>
+          {/* User Dropdown Menu */}
+          {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
@@ -59,7 +50,7 @@ export function Header() {
               <DropdownMenuSeparator />
               <DropdownMenuItem>Log out</DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
         </div>
       </div>
     </header>
