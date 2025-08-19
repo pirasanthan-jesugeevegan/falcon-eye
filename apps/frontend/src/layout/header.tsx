@@ -5,7 +5,7 @@ import { Settings } from 'lucide-react';
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-30 flex h-20 w-full items-center bg-background backdrop-blur supports-[backdrop-filter]:bg-background">
+    <header className="sticky top-0 z-30 flex justify-end h-20 w-full items-center bg-background backdrop-blur supports-[backdrop-filter]:bg-background">
       <div className="container flex items-center justify-end">
         <div className="flex items-center gap-2 mr-8">
           {/* Mode Toggle */}
