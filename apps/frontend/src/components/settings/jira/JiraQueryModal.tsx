@@ -107,11 +107,8 @@ export function JiraQueryModal({
           name: values.name,
           jiraConfigId: values.jiraConfigId || '',
           jqlQuery: values.jqlQuery,
-          description: values.description ?? '',
+          description: values.description,
           isActive: values.isActive,
-          jiraConfig: jiraConfigs.find(
-            (c: JiraConfig) => c.id === values.jiraConfigId,
-          )!,
         });
       } else {
         // Edit existing query

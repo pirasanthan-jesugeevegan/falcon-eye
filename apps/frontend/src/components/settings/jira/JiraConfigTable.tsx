@@ -40,8 +40,9 @@ export function JiraConfigTable({
     undefined,
   );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isDeleting] = useState(false);
+  // Remove the unused isDeleting state
   const deleteConfig = useDeleteJiraConfig();
+
   // Handle edit button click
   const handleEditClick = (config: JiraConfig) => {
     setEditData(config);
@@ -63,8 +64,11 @@ export function JiraConfigTable({
 
     try {
       await deleteConfig.mutateAsync(deleteData.id);
+      // Close modal and reset state after successful deletion
+      setIsDeleteModalOpen(false);
+      setDeleteData(undefined);
       // Success toast is handled in the mutation
-    } catch (error) {
+    } catch {
       // Error is handled in mutation
     }
   };
@@ -192,7 +196,7 @@ export function JiraConfigTable({
         onOpenChange={setIsDeleteModalOpen}
         onConfirm={handleDeleteConfirm}
         confirmText="Delete"
-        isLoading={isDeleting}
+        isLoading={deleteConfig.isPending}
       />
     </>
   );

@@ -15,6 +15,15 @@ export interface JiraQuery {
   jiraConfig: JiraConfig;
 }
 
+// Define the type for creating Jira queries (matches backend DTO)
+export interface CreateJiraQueryDto {
+  name: string;
+  jqlQuery: string;
+  description?: string;
+  jiraConfigId: string;
+  isActive?: boolean;
+}
+
 // API functions
 export const jiraApi = {
   getConfig: (): Promise<JiraConfig[]> => apiClient.get('/jira/config/'),
@@ -34,7 +43,7 @@ export const jiraApi = {
   getQuery: (id: string): Promise<JiraQuery> =>
     apiClient.get(`/jira/query/${id}`),
 
-  createQuery: (query: JiraQuery): Promise<JiraQuery> =>
+  createQuery: (query: CreateJiraQueryDto): Promise<JiraQuery> =>
     apiClient.post('/jira/query', query),
 
   updateQuery: (query: JiraQuery): Promise<JiraQuery> =>
@@ -115,6 +124,12 @@ export const useDeleteJiraConfig = () => {
           return oldData.filter(config => config.id !== deletedId);
         },
       );
+
+      // Invalidate queries cache to refetch from backend since cascade delete removes related queries
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.jira.queries(),
+      });
+
       toast.success('JIRA config deleted successfully');
     },
     onError: handleApiError,

@@ -1,6 +1,6 @@
 # Falcon Eye Backend
 
-The NestJS backend API for the Falcon Eye QA Dashboard, providing RESTful endpoints for product management, Jira integration, and test results tracking.
+The NestJS backend API for the Falcon Eye QA Dashboard, providing RESTful endpoints for product management, Jira integration, GitHub workflow management, SonarCloud integration, and test results tracking.
 
 ## 🎯 Features
 
@@ -27,7 +27,31 @@ The NestJS backend API for the Falcon Eye QA Dashboard, providing RESTful endpoi
   - Real-time issue status monitoring
   - Issue filtering and search capabilities
 
-#### 3. **Test Results Management**
+#### 3. **GitHub Integration**
+
+- **GitHub Configuration Management**:
+  - Store GitHub repository configurations
+  - Secure storage of GitHub tokens
+  - Repository-specific workflow settings
+- **Workflow Management**:
+  - Trigger GitHub Actions workflows
+  - Monitor workflow run status
+  - Retrieve workflow execution history
+  - Custom input schema support for workflows
+
+#### 4. **SonarCloud Integration**
+
+- **SonarCloud Configuration Management**:
+  - Store SonarCloud project configurations
+  - Secure storage of SonarCloud tokens
+  - Project-specific quality gate settings
+- **Quality Metrics Management**:
+  - Create and manage custom SonarCloud queries
+  - Execute queries against SonarCloud projects
+  - Monitor code quality metrics and quality gates
+  - Track code coverage and technical debt
+
+#### 5. **Test Results Management**
 
 - **E2E Test Results**:
   - Store end-to-end test execution results
@@ -40,7 +64,7 @@ The NestJS backend API for the Falcon Eye QA Dashboard, providing RESTful endpoi
   - Link to commits and pull requests
   - Author attribution and timestamps
 
-#### 4. **Database Management**
+#### 6. **Database Management**
 
 - **TypeORM Integration**: Full ORM support with PostgreSQL
 - **Migrations**: Version-controlled database schema changes
@@ -85,6 +109,28 @@ src/
 │   │   ├── jira.controller.ts
 │   │   ├── jira.module.ts
 │   │   └── jira.service.ts
+│   ├── github/        # GitHub integration
+│   │   ├── dto/        # GitHub DTOs
+│   │   │   ├── create-github-config.dto.ts
+│   │   │   └── trigger-workflow.dto.ts
+│   │   ├── entities/   # GitHub entities
+│   │   │   └── github-config.entity.ts
+│   │   ├── github-config.controller.ts
+│   │   ├── github-config.service.ts
+│   │   ├── github.service.ts
+│   │   └── github.module.ts
+│   ├── sonarcloud/    # SonarCloud integration
+│   │   ├── dto/        # SonarCloud DTOs
+│   │   │   ├── create-sonarcloud-config.dto.ts
+│   │   │   ├── create-sonarcloud-query.dto.ts
+│   │   │   ├── update-sonarcloud-config.dto.ts
+│   │   │   └── update-sonarcloud-query.dto.ts
+│   │   ├── entities/   # SonarCloud entities
+│   │   │   ├── sonarcloud-config.entity.ts
+│   │   │   └── sonarcloud-query.entity.ts
+│   │   ├── sonarcloud.controller.ts
+│   │   ├── sonarcloud.module.ts
+│   │   └── sonarcloud.service.ts
 │   ├── e2e-results/   # E2E test results
 │   │   ├── dto/
 │   │   │   └── create-e2e-result.dto.ts
@@ -131,14 +177,20 @@ pnpm install
 
 ```env
 # Database Configuration
-DATABASE_URL=postgresql://username:password@localhost:5432/qa_dashboard
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+DB_NAME=qa_dashboard
 
 # Application Configuration
 NODE_ENV=development
 PORT=3000
 
-# Jira Configuration (optional)
+# External API Configuration (optional)
 JIRA_API_TIMEOUT=30000
+GITHUB_API_TIMEOUT=30000
+SONARCLOUD_API_TIMEOUT=30000
 ```
 
 3. **Database Setup**
@@ -159,7 +211,7 @@ pnpm seed
 pnpm start:dev
 ```
 
-The API will be available at `http://localhost:3000`
+The API will be available at `http://localhost:3000/api`
 
 #### **Start in debug mode**
 
@@ -222,20 +274,12 @@ pnpm migration:revert
 pnpm seed
 ```
 
-### Database Testing
-
-#### **Test database connection**
-
-```bash
-pnpm db:test
-```
-
 ## 🔌 API Documentation
 
 ### Base URL
 
 ```
-http://localhost:3000
+http://localhost:3000/api
 ```
 
 ### Authentication
@@ -246,14 +290,14 @@ Currently, the API does not require authentication. All endpoints are publicly a
 
 #### **Products Management**
 
-##### `GET /products`
+##### `GET /api/products`
 
 Get all products
 
 - **Response**: Array of Product objects
 - **Status**: 200 OK
 
-##### `GET /products/:id`
+##### `GET /api/products/:id`
 
 Get a specific product by ID
 
@@ -261,7 +305,7 @@ Get a specific product by ID
 - **Response**: Product object
 - **Status**: 200 OK
 
-##### `POST /products`
+##### `POST /api/products`
 
 Create a new product
 
@@ -279,7 +323,7 @@ Create a new product
 - **Response**: Created Product object
 - **Status**: 201 Created
 
-##### `PATCH /products/:id`
+##### `PATCH /api/products/:id`
 
 Update a product
 
@@ -288,7 +332,7 @@ Update a product
 - **Response**: Updated Product object
 - **Status**: 200 OK
 
-##### `DELETE /products/:id`
+##### `DELETE /api/products/:id`
 
 Delete a product
 
@@ -420,9 +464,212 @@ Execute a Jira query
 - **Response**: Query execution results with issues
 - **Status**: 200 OK
 
+#### **GitHub Integration**
+
+##### **GitHub Configuration Endpoints**
+
+##### `GET /api/github/config`
+
+Get all GitHub configurations
+
+- **Response**: Array of GithubConfig objects
+- **Status**: 200 OK
+
+##### `POST /api/github/config`
+
+Create a new GitHub configuration
+
+- **Request Body**:
+
+```json
+{
+  "repository": "string (required)",
+  "token": "string (required)",
+  "workflowFile": "string (required)",
+  "inputsSchema": "array (optional)"
+}
+```
+
+- **Response**: Created GithubConfig object
+- **Status**: 201 Created
+
+##### `PATCH /api/github/config/:id`
+
+Update GitHub configuration inputs schema
+
+- **Parameters**: `id` (string) - Configuration UUID
+- **Request Body**:
+
+```json
+{
+  "inputsSchema": "array (required)"
+}
+```
+
+- **Response**: Updated GithubConfig object
+- **Status**: 200 OK
+
+##### `DELETE /api/github/config/:id`
+
+Delete a GitHub configuration
+
+- **Parameters**: `id` (string) - Configuration UUID
+- **Response**: No content
+- **Status**: 204 No Content
+
+##### **GitHub Workflow Endpoints**
+
+##### `POST /api/github/config/:id/trigger`
+
+Trigger a GitHub workflow
+
+- **Parameters**: `id` (string) - Configuration UUID
+- **Request Body**:
+
+```json
+{
+  "inputs": "object (optional)"
+}
+```
+
+- **Response**: Workflow trigger result
+- **Status**: 200 OK
+
+##### `GET /api/github/config/:id/runs`
+
+Get workflow runs for a configuration
+
+- **Parameters**: `id` (string) - Configuration UUID
+- **Response**: Array of workflow runs
+- **Status**: 200 OK
+
+##### `GET /api/github/config/:id/runs/:runId`
+
+Get specific workflow run status
+
+- **Parameters**:
+  - `id` (string) - Configuration UUID
+  - `runId` (string) - Workflow run ID
+- **Response**: Workflow run details
+- **Status**: 200 OK
+
+#### **SonarCloud Integration**
+
+##### **SonarCloud Configuration Endpoints**
+
+##### `GET /api/sonarcloud/config`
+
+Get all SonarCloud configurations
+
+- **Response**: Array of SonarCloudConfig objects
+- **Status**: 200 OK
+
+##### `GET /api/sonarcloud/config/:id`
+
+Get a specific SonarCloud configuration
+
+- **Parameters**: `id` (string) - Configuration UUID
+- **Response**: SonarCloudConfig object
+- **Status**: 200 OK
+
+##### `POST /api/sonarcloud/config`
+
+Create a new SonarCloud configuration
+
+- **Request Body**:
+
+```json
+{
+  "organization": "string (required)",
+  "projectKey": "string (required)",
+  "token": "string (required)"
+}
+```
+
+- **Response**: Created SonarCloudConfig object
+- **Status**: 201 Created
+
+##### `PATCH /api/sonarcloud/config/:id`
+
+Update a SonarCloud configuration
+
+- **Parameters**: `id` (string) - Configuration UUID
+- **Request Body**: Partial SonarCloudConfig object
+- **Response**: Updated SonarCloudConfig object
+- **Status**: 200 OK
+
+##### `DELETE /api/sonarcloud/config/:id`
+
+Delete a SonarCloud configuration
+
+- **Parameters**: `id` (string) - Configuration UUID
+- **Response**: No content
+- **Status**: 204 No Content
+
+##### **SonarCloud Query Endpoints**
+
+##### `GET /api/sonarcloud/query`
+
+Get all SonarCloud queries
+
+- **Response**: Array of SonarCloudQuery objects
+- **Status**: 200 OK
+
+##### `GET /api/sonarcloud/query/:id`
+
+Get a specific SonarCloud query
+
+- **Parameters**: `id` (string) - Query UUID
+- **Response**: SonarCloudQuery object
+- **Status**: 200 OK
+
+##### `GET /api/sonarcloud/config/:configId/query`
+
+Get queries by configuration ID
+
+- **Parameters**: `configId` (string) - Configuration UUID
+- **Response**: Array of SonarCloudQuery objects
+- **Status**: 200 OK
+
+##### `POST /api/sonarcloud/query`
+
+Create a new SonarCloud query
+
+- **Request Body**:
+
+```json
+{
+  "name": "string (required)",
+  "query": "string (required)",
+  "description": "string (optional)",
+  "sonarCloudConfigId": "string (required, UUID)",
+  "isActive": "boolean (optional, default: true)"
+}
+```
+
+- **Response**: Created SonarCloudQuery object
+- **Status**: 201 Created
+
+##### `PATCH /api/sonarcloud/query/:id`
+
+Update a SonarCloud query
+
+- **Parameters**: `id` (string) - Query UUID
+- **Request Body**: Partial SonarCloudQuery object
+- **Response**: Updated SonarCloudQuery object
+- **Status**: 200 OK
+
+##### `DELETE /api/sonarcloud/query/:id`
+
+Delete a SonarCloud query
+
+- **Parameters**: `id` (string) - Query UUID
+- **Response**: No content
+- **Status**: 204 No Content
+
 #### **E2E Test Results**
 
-##### `GET /e2e-results`
+##### `GET /api/e2e-results`
 
 Get all E2E test results
 
@@ -430,7 +677,7 @@ Get all E2E test results
 - **Response**: Array of E2EResult objects
 - **Status**: 200 OK
 
-##### `GET /e2e-results/:id`
+##### `GET /api/e2e-results/:id`
 
 Get a specific E2E test result
 
@@ -438,7 +685,7 @@ Get a specific E2E test result
 - **Response**: E2EResult object
 - **Status**: 200 OK
 
-##### `POST /e2e-results`
+##### `POST /api/e2e-results`
 
 Create a new E2E test result
 
@@ -463,7 +710,7 @@ Create a new E2E test result
 
 #### **Unit Test Results**
 
-##### `GET /unit-results`
+##### `GET /api/unit-results`
 
 Get all unit test results
 
@@ -471,7 +718,7 @@ Get all unit test results
 - **Response**: Array of UnitResult objects
 - **Status**: 200 OK
 
-##### `GET /unit-results/:id`
+##### `GET /api/unit-results/:id`
 
 Get a specific unit test result
 
@@ -479,7 +726,7 @@ Get a specific unit test result
 - **Response**: UnitResult object
 - **Status**: 200 OK
 
-##### `POST /unit-results`
+##### `POST /api/unit-results`
 
 Create a new unit test result
 
@@ -524,7 +771,7 @@ The application follows NestJS module architecture:
 
 - **Business Logic**: Encapsulated in service classes
 - **Data Access**: TypeORM repositories for database operations
-- **External APIs**: Axios for Jira API integration
+- **External APIs**: Axios for Jira, GitHub, and SonarCloud API integration
 - **Error Handling**: Comprehensive error management
 
 ### Validation
@@ -544,7 +791,7 @@ The application follows NestJS module architecture:
 
 ### Data Protection
 
-- Secure storage of Jira API tokens
+- Secure storage of API tokens (Jira, GitHub, SonarCloud)
 - Environment variable management
 - Database connection security
 
@@ -606,7 +853,7 @@ The application can be containerized for deployment:
 ### Health Checks
 
 - Database connection health
-- External API connectivity
+- External API connectivity (Jira, GitHub, SonarCloud)
 - Application status endpoints
 
 ## 🤝 Contributing
@@ -623,3 +870,6 @@ The application can be containerized for deployment:
 - [TypeORM Documentation](https://typeorm.io/)
 - [Class Validator Documentation](https://github.com/typestack/class-validator)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [GitHub REST API Documentation](https://docs.github.com/en/rest)
+- [Jira REST API Documentation](https://developer.atlassian.com/cloud/jira/platform/rest/v3/)
+- [SonarCloud Web API Documentation](https://sonarcloud.io/web_api/)

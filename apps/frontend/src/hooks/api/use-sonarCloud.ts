@@ -129,6 +129,10 @@ export const useDeleteSonarCloudConfig = () => {
           return oldData.filter(config => config.id !== deletedId);
         },
       );
+      // Invalidate queries cache to refetch from backend since cascade delete removes related queries
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.sonarCloud.queries(),
+      });
       toast.success('SonarCloud config deleted successfully');
     },
     onError: handleApiError,

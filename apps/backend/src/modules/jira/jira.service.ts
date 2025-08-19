@@ -218,7 +218,7 @@ export class JiraService {
   ): Promise<boolean> {
     try {
       const response = await axios.post(
-        `${baseUrl}/rest/api/3/search`,
+        `${baseUrl}/rest/api/3/search/jql`,
         {
           jql: jqlQuery,
           maxResults: 1,
@@ -248,15 +248,13 @@ export class JiraService {
     apiToken: string,
     jqlQuery: string,
     maxResults = 50,
-    startAt = 0,
   ): Promise<any> {
     try {
       const response = await axios.post(
-        `${baseUrl}/rest/api/3/search`,
+        `${baseUrl}/rest/api/3/search/jql`,
         {
           jql: jqlQuery,
           maxResults,
-          startAt,
           fields: [
             'summary',
             'status',

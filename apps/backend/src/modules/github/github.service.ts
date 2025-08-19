@@ -60,8 +60,6 @@ export class GithubService {
     encryptedPat: string,
   ) {
     const pat = decrypt(encryptedPat);
-    console.log('pat', pat);
-
     const url = `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/actions/workflows/${encodeURIComponent(workflow)}/dispatches`;
     const body = { ref, inputs };
     const headers = {
