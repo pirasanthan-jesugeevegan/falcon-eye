@@ -20,8 +20,8 @@ export class JiraConfig {
   @Column()
   email: string;
 
-  @Column()
-  apiToken: string;
+  @Column({ type: 'text' })
+  encryptedApiToken: string;
 
   @Column({ nullable: true })
   projectKey: string;

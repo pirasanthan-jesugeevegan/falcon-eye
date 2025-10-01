@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import axios from 'axios';
+import { encrypt, decrypt } from '../../crypto.util';
 import { JiraConfig } from './entities/jira-config.entity';
 import { JiraQuery } from './entities/jira-query.entity';
 import { CreateJiraConfigDto } from './dto/create-jira-config.dto';
@@ -27,14 +28,6 @@ export class JiraService {
     createJiraConfigDto: CreateJiraConfigDto,
   ): Promise<JiraConfig> {
     try {
-      const existingConfig = await this.jiraConfigRepository.findOne({
-        where: { apiToken: createJiraConfigDto.apiToken },
-      });
-
-      // If the apiToken exists, throw an error
-      if (existingConfig) {
-        throw new BadRequestException('API token already exists');
-      }
       // Verify Jira credentials before saving
       await this.verifyJiraCredentials(
         createJiraConfigDto.baseUrl,
@@ -42,7 +35,13 @@ export class JiraService {
         createJiraConfigDto.apiToken,
       );
 
-      const jiraConfig = this.jiraConfigRepository.create(createJiraConfigDto);
+      // Encrypt the API token before saving
+      const encryptedApiToken = encrypt(createJiraConfigDto.apiToken);
+
+      const jiraConfig = this.jiraConfigRepository.create({
+        ...createJiraConfigDto,
+        encryptedApiToken,
+      });
 
       return this.jiraConfigRepository.save(jiraConfig);
     } catch (error) {
@@ -81,15 +80,23 @@ export class JiraService {
       updateJiraConfigDto.email ||
       updateJiraConfigDto.apiToken
     ) {
+      const currentApiToken = decrypt(jiraConfig.encryptedApiToken);
       await this.verifyJiraCredentials(
         updateJiraConfigDto.baseUrl || jiraConfig.baseUrl,
         updateJiraConfigDto.email || jiraConfig.email,
-        updateJiraConfigDto.apiToken || jiraConfig.apiToken,
+        updateJiraConfigDto.apiToken || currentApiToken,
       );
     }
 
+    // If apiToken is being updated, encrypt it
+    const updates: any = { ...updateJiraConfigDto };
+    if (updateJiraConfigDto.apiToken) {
+      updates.encryptedApiToken = encrypt(updateJiraConfigDto.apiToken);
+      delete updates.apiToken;
+    }
+
     // Update the configuration
-    Object.assign(jiraConfig, updateJiraConfigDto);
+    Object.assign(jiraConfig, updates);
     return this.jiraConfigRepository.save(jiraConfig);
   }
 
@@ -107,11 +114,14 @@ export class JiraService {
       createJiraQueryDto.jiraConfigId,
     );
 
+    // Decrypt the API token for use
+    const apiToken = decrypt(jiraConfig.encryptedApiToken);
+
     // Verify if the JQL query is valid
     await this.verifyJqlQuery(
       jiraConfig.baseUrl,
       jiraConfig.email,
-      jiraConfig.apiToken,
+      apiToken,
       createJiraQueryDto.jqlQuery,
     );
 
@@ -154,10 +164,13 @@ export class JiraService {
       const jiraConfig = await this.findJiraConfigById(jiraConfigId);
       const jqlQuery = updateJiraQueryDto.jqlQuery || jiraQuery.jqlQuery;
 
+      // Decrypt the API token for use
+      const apiToken = decrypt(jiraConfig.encryptedApiToken);
+
       await this.verifyJqlQuery(
         jiraConfig.baseUrl,
         jiraConfig.email,
-        jiraConfig.apiToken,
+        apiToken,
         jqlQuery,
       );
     }
@@ -177,10 +190,13 @@ export class JiraService {
     const jiraQuery = await this.findJiraQueryById(queryId);
     const jiraConfig = await this.findJiraConfigById(jiraQuery.jiraConfigId);
 
+    // Decrypt the API token for use
+    const apiToken = decrypt(jiraConfig.encryptedApiToken);
+
     return this.searchJiraIssues(
       jiraConfig.baseUrl,
       jiraConfig.email,
-      jiraConfig.apiToken,
+      apiToken,
       jiraQuery.jqlQuery,
     );
   }
@@ -217,13 +233,14 @@ export class JiraService {
     jqlQuery: string,
   ): Promise<boolean> {
     try {
-      const response = await axios.post(
-        `${baseUrl}/rest/api/3/search`,
+      const cleanBaseUrl = baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
+      const response = await axios.get(
+        `${cleanBaseUrl}/rest/api/3/search/jql`,
         {
-          jql: jqlQuery,
-          maxResults: 1,
-        },
-        {
+          params: {
+            jql: jqlQuery,
+            maxResults: 1,
+          },
           auth: {
             username: email,
             password: apiToken,
@@ -235,9 +252,20 @@ export class JiraService {
         return true;
       }
       throw new BadRequestException('Invalid JQL query');
-    } catch (error) {
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const statusText = error?.response?.statusText;
+      const errorData = error?.response?.data;
+
+      console.error('Jira API Error:', {
+        status,
+        statusText,
+        data: errorData,
+        url: `${baseUrl}/rest/api/3/search`,
+      });
+
       throw new BadRequestException(
-        `Failed to verify JQL query: ${error.message}`,
+        `Failed to verify JQL query: ${error.message} (Status: ${status})`,
       );
     }
   }
@@ -251,23 +279,17 @@ export class JiraService {
     startAt = 0,
   ): Promise<any> {
     try {
-      const response = await axios.post(
-        `${baseUrl}/rest/api/3/search`,
+      const cleanBaseUrl = baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
+      const response = await axios.get(
+        `${cleanBaseUrl}/rest/api/3/search/jql`,
         {
-          jql: jqlQuery,
-          maxResults,
-          startAt,
-          fields: [
-            'summary',
-            'status',
-            'assignee',
-            'created',
-            'updated',
-            'priority',
-            'issuetype',
-          ],
-        },
-        {
+          params: {
+            jql: jqlQuery,
+            maxResults,
+            startAt,
+            fields:
+              'summary,status,assignee,created,updated,priority,issuetype',
+          },
           auth: {
             username: email,
             password: apiToken,
@@ -276,7 +298,16 @@ export class JiraService {
       );
 
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
+      const status = error?.response?.status;
+      const errorData = error?.response?.data;
+
+      console.error('Jira Search Error:', {
+        status,
+        data: errorData,
+        jql: jqlQuery,
+      });
+
       throw new BadRequestException(
         `Failed to search Jira issues: ${error.message}`,
       );

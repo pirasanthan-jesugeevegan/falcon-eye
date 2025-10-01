@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import axios from 'axios';
+import { encrypt, decrypt } from '../../crypto.util';
 import { SonarCloudConfig } from './entities/sonarcloud-config.entity';
 import { SonarCloudQuery } from './entities/sonarcloud-query.entity';
 import { CreateSonarCloudConfigDto } from './dto/create-sonarcloud-config.dto';
@@ -27,23 +28,19 @@ export class SonarCloudService {
     createSonarCloudConfigDto: CreateSonarCloudConfigDto,
   ): Promise<SonarCloudConfig> {
     try {
-      const existingConfig = await this.sonarCloudConfigRepository.findOne({
-        where: { apiToken: createSonarCloudConfigDto.apiToken },
-      });
-
-      // If the apiToken exists, throw an error
-      if (existingConfig) {
-        throw new BadRequestException('API token already exists');
-      }
       // Verify SonarCloud credentials before saving
       await this.verifySonarCloudCredentials(
         createSonarCloudConfigDto.baseUrl,
         createSonarCloudConfigDto.apiToken,
       );
 
-      const sonarCloudConfig = this.sonarCloudConfigRepository.create(
-        createSonarCloudConfigDto,
-      );
+      // Encrypt the API token before saving
+      const encryptedApiToken = encrypt(createSonarCloudConfigDto.apiToken);
+
+      const sonarCloudConfig = this.sonarCloudConfigRepository.create({
+        ...createSonarCloudConfigDto,
+        encryptedApiToken,
+      });
 
       return this.sonarCloudConfigRepository.save(sonarCloudConfig);
     } catch (error) {
@@ -83,14 +80,22 @@ export class SonarCloudService {
       updateSonarCloudConfigDto.baseUrl ||
       updateSonarCloudConfigDto.apiToken
     ) {
+      const currentApiToken = decrypt(sonarCloudConfig.encryptedApiToken);
       await this.verifySonarCloudCredentials(
         updateSonarCloudConfigDto.baseUrl || sonarCloudConfig.baseUrl,
-        updateSonarCloudConfigDto.apiToken || sonarCloudConfig.apiToken,
+        updateSonarCloudConfigDto.apiToken || currentApiToken,
       );
     }
 
+    // If apiToken is being updated, encrypt it
+    const updates: any = { ...updateSonarCloudConfigDto };
+    if (updateSonarCloudConfigDto.apiToken) {
+      updates.encryptedApiToken = encrypt(updateSonarCloudConfigDto.apiToken);
+      delete updates.apiToken;
+    }
+
     // Update the configuration
-    Object.assign(sonarCloudConfig, updateSonarCloudConfigDto);
+    Object.assign(sonarCloudConfig, updates);
     return this.sonarCloudConfigRepository.save(sonarCloudConfig);
   }
 
@@ -108,12 +113,15 @@ export class SonarCloudService {
       createSonarCloudQueryDto.sonarCloudConfigId,
     );
 
+    // Decrypt the API token for use
+    const apiToken = decrypt(sonarCloudConfig.encryptedApiToken);
+
     if (createSonarCloudQueryDto.metric.includes('pull_request')) {
       // Verify if the JQL query is valid
 
       await this.getSonarCloudMetric(
         sonarCloudConfig.baseUrl,
-        sonarCloudConfig.apiToken,
+        apiToken,
         createSonarCloudQueryDto.project,
         'pull_request',
       );
@@ -123,7 +131,7 @@ export class SonarCloudService {
       // Verify if the JQL query is valid
       await this.getSonarCloudMetric(
         sonarCloudConfig.baseUrl,
-        sonarCloudConfig.apiToken,
+        apiToken,
         createSonarCloudQueryDto.project,
         'project_status',
       );
@@ -180,10 +188,13 @@ export class SonarCloudService {
       const project =
         updateSonarCloudQueryDto.project || sonarCloudQuery.project;
 
+      // Decrypt the API token for use
+      const apiToken = decrypt(sonarCloudConfig.encryptedApiToken);
+
       if (updateSonarCloudQueryDto.metric.includes('pull_request')) {
         await this.getSonarCloudMetric(
           sonarCloudConfig.baseUrl,
-          sonarCloudConfig.apiToken,
+          apiToken,
           project,
           'pull_request',
         );
@@ -192,7 +203,7 @@ export class SonarCloudService {
       if (updateSonarCloudQueryDto.metric.includes('project_status')) {
         await this.getSonarCloudMetric(
           sonarCloudConfig.baseUrl,
-          sonarCloudConfig.apiToken,
+          apiToken,
           project,
           'project_status',
         );
@@ -217,11 +228,14 @@ export class SonarCloudService {
     );
     const result: Record<string, any> = {};
 
+    // Decrypt the API token for use
+    const apiToken = decrypt(sonarCloudConfig.encryptedApiToken);
+
     await Promise.all(
       sonarCloudQuery.metric.map(async (metric) => {
         const data = await this.getSonarCloudMetric(
           sonarCloudConfig.baseUrl,
-          sonarCloudConfig.apiToken,
+          apiToken,
           sonarCloudQuery.project,
           metric as 'pull_request' | 'project_status',
         );

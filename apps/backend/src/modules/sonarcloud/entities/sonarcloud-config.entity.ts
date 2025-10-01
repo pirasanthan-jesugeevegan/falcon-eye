@@ -17,8 +17,8 @@ export class SonarCloudConfig {
   @Column()
   baseUrl: string;
 
-  @Column()
-  apiToken: string;
+  @Column({ type: 'text' })
+  encryptedApiToken: string;
 
   @Column({ default: true })
   isActive: boolean;
