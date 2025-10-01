@@ -1,6 +1,9 @@
 // Product types
 export type { Product } from './product.types';
 
+// Infrastructure types
+export type { Infrastructure } from './infrastructure.types';
+
 // Jira types
 export type {
   JiraConfig,

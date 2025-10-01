@@ -3,6 +3,7 @@ import { ProductSettingsCard } from '@/components/settings/ProductSettingsCard';
 import { JiraIntegrationCard } from '@/components/settings/JiraIntegrationCard';
 import SonarCloudIntegrationCard from '@/components/settings/SonarCloudIntegrationCard';
 import { GitHubIntegrationCard } from '@/components/settings/GitHubIntegrationCard';
+import { InfraIntegrationCard } from '@/components/settings/InfraIntegrationCard';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useEffect } from 'react';
 
@@ -40,11 +41,12 @@ export function SettingsPage() {
       </div>
 
       <Tabs value={currentTab} onValueChange={handleTabChange}>
-        <TabsList className="grid w-full grid-cols-4 md:w-[600px]">
+        <TabsList className="grid w-full grid-cols-5 md:w-[600px]">
           <TabsTrigger value="products">Products</TabsTrigger>
           <TabsTrigger value="jira">Jira</TabsTrigger>
           <TabsTrigger value="sonarcloud">SonarCloud</TabsTrigger>
           <TabsTrigger value="github">GitHub</TabsTrigger>
+          <TabsTrigger value="infra">Infra</TabsTrigger>
         </TabsList>
 
         <TabsContent value="products" className="mt-6 space-y-6">
@@ -61,6 +63,10 @@ export function SettingsPage() {
 
         <TabsContent value="github" className="mt-6 space-y-6">
           <GitHubIntegrationCard />
+        </TabsContent>
+
+        <TabsContent value="infra" className="mt-6 space-y-6">
+          <InfraIntegrationCard />
         </TabsContent>
       </Tabs>
     </div>

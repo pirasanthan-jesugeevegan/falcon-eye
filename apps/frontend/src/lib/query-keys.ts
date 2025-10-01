@@ -10,6 +10,15 @@ export const queryKeys = {
     detail: (id: string) => [...queryKeys.products.details(), id] as const,
   },
 
+  // Infrastructure
+  infrastructure: {
+    all: ['infrastructure'] as const,
+    lists: () => [...queryKeys.infrastructure.all, 'list'] as const,
+    details: () => [...queryKeys.infrastructure.all, 'detail'] as const,
+    detail: (id: string) =>
+      [...queryKeys.infrastructure.details(), id] as const,
+  },
+
   // Test Results
   testResults: {
     all: ['testResults'] as const,
@@ -59,6 +68,7 @@ export const queryKeys = {
 // Helper function to invalidate related queries
 export const getInvalidationKeys = {
   products: () => [queryKeys.products.all],
+  infrastructure: () => [queryKeys.infrastructure.all],
   testResults: () => [queryKeys.testResults.all],
   jira: () => [queryKeys.jira.all],
   sonarCloud: () => [queryKeys.sonarCloud.all],

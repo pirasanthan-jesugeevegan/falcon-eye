@@ -4,6 +4,8 @@
 export type {
   // Product types
   Product,
+  // Infrastructure types
+  Infrastructure,
   // Jira types
   JiraConfig,
   JiraQuery,

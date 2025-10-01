@@ -7,6 +7,7 @@ import { AlignJustify, Github, LayoutDashboard, X } from 'lucide-react';
 import { SidebarSection } from '@/components/ui/sidebar-section';
 import {
   useGithubConfig,
+  useInfrastructure,
   useJiraQueries,
   useProducts,
   useSonarCloudQueries,
@@ -21,7 +22,8 @@ export function Sidebar() {
   const { data: sonarCloud = [], isLoading: isSonarCloudLoading } =
     useSonarCloudQueries();
   const { data: github = [], isLoading: isGithubLoading } = useGithubConfig();
-
+  const { data: infrastructure = [], isLoading: isInfrastructureLoading } =
+    useInfrastructure();
   useEffect(() => {
     // Check if mobile
     const checkIfMobile = () => {
@@ -98,7 +100,8 @@ export function Sidebar() {
           {isLoading ||
           isJiraLoading ||
           isSonarCloudLoading ||
-          isGithubLoading ? (
+          isGithubLoading ||
+          isInfrastructureLoading ? (
             <div className="flex items-center justify-center h-20">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
@@ -175,6 +178,21 @@ export function Sidebar() {
                       }))}
                       basePath="/sonarCloud"
                       showActiveOnly={true}
+                    />
+                  )}
+
+                {/* Infrastructure */}
+                {infrastructure.length > 0 &&
+                  infrastructure.filter(infra => infra.isActive).length > 0 && (
+                    <SidebarSection
+                      title="Infrastructure"
+                      description="List of infrastructure dashboards"
+                      items={infrastructure.map(infra => ({
+                        id: infra.id!.toString(),
+                        name: infra.name,
+                        isActive: infra.isActive,
+                      }))}
+                      basePath="/infra"
                     />
                   )}
               </div>

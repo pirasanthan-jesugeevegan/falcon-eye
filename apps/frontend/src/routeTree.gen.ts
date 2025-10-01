@@ -22,6 +22,7 @@ const ProductsProductIdLazyRouteImport = createFileRoute(
   '/products/$productId',
 )()
 const JiraJiraIdLazyRouteImport = createFileRoute('/jira/$jiraId')()
+const InfraInfraIdLazyRouteImport = createFileRoute('/infra/$infraId')()
 
 const SettingsLazyRoute = SettingsLazyRouteImport.update({
   id: '/settings',
@@ -60,11 +61,19 @@ const JiraJiraIdLazyRoute = JiraJiraIdLazyRouteImport.update({
   path: '/jira/$jiraId',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/jira/$jiraId.lazy').then((d) => d.Route))
+const InfraInfraIdLazyRoute = InfraInfraIdLazyRouteImport.update({
+  id: '/infra/$infraId',
+  path: '/infra/$infraId',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/infra/$infraId.lazy').then((d) => d.Route),
+)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/githubWorkflow': typeof GithubWorkflowLazyRoute
   '/settings': typeof SettingsLazyRoute
+  '/infra/$infraId': typeof InfraInfraIdLazyRoute
   '/jira/$jiraId': typeof JiraJiraIdLazyRoute
   '/products/$productId': typeof ProductsProductIdLazyRoute
   '/sonarCloud/$sonarCloudId': typeof SonarCloudSonarCloudIdLazyRoute
@@ -73,6 +82,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/githubWorkflow': typeof GithubWorkflowLazyRoute
   '/settings': typeof SettingsLazyRoute
+  '/infra/$infraId': typeof InfraInfraIdLazyRoute
   '/jira/$jiraId': typeof JiraJiraIdLazyRoute
   '/products/$productId': typeof ProductsProductIdLazyRoute
   '/sonarCloud/$sonarCloudId': typeof SonarCloudSonarCloudIdLazyRoute
@@ -82,6 +92,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/githubWorkflow': typeof GithubWorkflowLazyRoute
   '/settings': typeof SettingsLazyRoute
+  '/infra/$infraId': typeof InfraInfraIdLazyRoute
   '/jira/$jiraId': typeof JiraJiraIdLazyRoute
   '/products/$productId': typeof ProductsProductIdLazyRoute
   '/sonarCloud/$sonarCloudId': typeof SonarCloudSonarCloudIdLazyRoute
@@ -92,6 +103,7 @@ export interface FileRouteTypes {
     | '/'
     | '/githubWorkflow'
     | '/settings'
+    | '/infra/$infraId'
     | '/jira/$jiraId'
     | '/products/$productId'
     | '/sonarCloud/$sonarCloudId'
@@ -100,6 +112,7 @@ export interface FileRouteTypes {
     | '/'
     | '/githubWorkflow'
     | '/settings'
+    | '/infra/$infraId'
     | '/jira/$jiraId'
     | '/products/$productId'
     | '/sonarCloud/$sonarCloudId'
@@ -108,6 +121,7 @@ export interface FileRouteTypes {
     | '/'
     | '/githubWorkflow'
     | '/settings'
+    | '/infra/$infraId'
     | '/jira/$jiraId'
     | '/products/$productId'
     | '/sonarCloud/$sonarCloudId'
@@ -117,6 +131,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   GithubWorkflowLazyRoute: typeof GithubWorkflowLazyRoute
   SettingsLazyRoute: typeof SettingsLazyRoute
+  InfraInfraIdLazyRoute: typeof InfraInfraIdLazyRoute
   JiraJiraIdLazyRoute: typeof JiraJiraIdLazyRoute
   ProductsProductIdLazyRoute: typeof ProductsProductIdLazyRoute
   SonarCloudSonarCloudIdLazyRoute: typeof SonarCloudSonarCloudIdLazyRoute
@@ -166,6 +181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JiraJiraIdLazyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/infra/$infraId': {
+      id: '/infra/$infraId'
+      path: '/infra/$infraId'
+      fullPath: '/infra/$infraId'
+      preLoaderRoute: typeof InfraInfraIdLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -173,6 +195,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   GithubWorkflowLazyRoute: GithubWorkflowLazyRoute,
   SettingsLazyRoute: SettingsLazyRoute,
+  InfraInfraIdLazyRoute: InfraInfraIdLazyRoute,
   JiraJiraIdLazyRoute: JiraJiraIdLazyRoute,
   ProductsProductIdLazyRoute: ProductsProductIdLazyRoute,
   SonarCloudSonarCloudIdLazyRoute: SonarCloudSonarCloudIdLazyRoute,
