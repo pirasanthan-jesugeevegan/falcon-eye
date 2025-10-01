@@ -1,23 +1,22 @@
 import * as crypto from 'crypto';
-import { config } from 'dotenv';
-
-config();
 
 const ALGO = 'aes-256-gcm';
 const IV_LEN = 12; // recommended for GCM
 const AUTH_TAG_LEN = 16;
 
-const MASTER_KEY = process.env.ENCRYPTION_KEY; // 32 bytes base64 or raw
-
-if (!MASTER_KEY) {
-  throw new Error('ENCRYPTION_KEY not set');
+function getMasterKey(): string {
+  const key = process.env.ENCRYPTION_KEY;
+  if (!key) {
+    throw new Error('ENCRYPTION_KEY not set');
+  }
+  return key;
 }
 
 export function encrypt(text: string): string {
   const iv = crypto.randomBytes(IV_LEN);
   const cipher = crypto.createCipheriv(
     ALGO,
-    Buffer.from(MASTER_KEY, 'base64'),
+    Buffer.from(getMasterKey(), 'base64'),
     iv,
   );
   const encrypted = Buffer.concat([
@@ -36,7 +35,7 @@ export function decrypt(enc: string): string {
   const ciphertext = data.slice(IV_LEN + AUTH_TAG_LEN);
   const decipher = crypto.createDecipheriv(
     ALGO,
-    Buffer.from(MASTER_KEY, 'base64'),
+    Buffer.from(getMasterKey(), 'base64'),
     iv,
   );
   decipher.setAuthTag(tag);

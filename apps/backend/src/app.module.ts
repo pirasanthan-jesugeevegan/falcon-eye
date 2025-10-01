@@ -21,6 +21,11 @@ import { GithubConfig } from './modules/github/entities/github-config.entity';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: [
+        join(process.cwd(), '.env'),
+        join(process.cwd(), '../../.env'),
+        join(__dirname, '../../../.env'),
+      ],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -45,10 +50,7 @@ import { GithubConfig } from './modules/github/entities/github-config.entity';
         synchronize: true,
         migrations: [join(__dirname, 'database', 'migrations', '*.{ts,js}')],
         migrationsRun: true,
-        ssl:
-          configService.get<string>('NODE_ENV') === 'production'
-            ? { rejectUnauthorized: false }
-            : false,
+        ssl: true,
       }),
     }),
     ProductsModule,

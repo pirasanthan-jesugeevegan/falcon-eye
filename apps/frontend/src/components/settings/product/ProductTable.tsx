@@ -50,10 +50,6 @@ export function ProductTable({
       header: 'Icon',
       cell: info => info.getValue(),
     }),
-    productColumnHelper.accessor('path', {
-      header: 'Path',
-      cell: info => info.getValue() || '-',
-    }),
     productColumnHelper.accessor('isActive', {
       header: 'Status',
       cell: info => (info.getValue() ? 'Active' : 'Inactive'),

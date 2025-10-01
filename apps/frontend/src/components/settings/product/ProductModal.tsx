@@ -42,7 +42,6 @@ import {
 const productFormSchema = z.object({
   productName: z.string().min(1, { message: 'Product name is required.' }),
   icon: z.string().optional(),
-  path: z.string().optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -74,7 +73,6 @@ export function ProductModal({
     defaultValues: {
       productName: editData?.productName || '',
       icon: editData?.icon || '',
-      path: editData?.path || '',
       isActive: editData?.isActive || true,
     },
   });
@@ -85,7 +83,6 @@ export function ProductModal({
       configForm.reset({
         productName: editData?.productName || '',
         icon: editData?.icon || '',
-        path: editData?.path || '',
         isActive: editData?.isActive ?? true,
       });
     }
@@ -100,14 +97,12 @@ export function ProductModal({
         await createProduct.mutateAsync({
           productName: values.productName,
           icon: values.icon || '',
-          path: values.path || '',
           isActive: values.isActive ?? true,
         });
 
         configForm.reset({
           productName: '',
           icon: '',
-          path: '',
           isActive: true,
         });
       } else {
@@ -215,24 +210,7 @@ export function ProductModal({
                 )}
               />
             )}
-            {mode === 'create' && (
-              <FormField
-                control={configForm.control}
-                name="path"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Path</FormLabel>
-                    <FormControl>
-                      <Input placeholder="/product-path" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Path for the product. Must start with a forward slash (/).
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+
             <FormField
               control={configForm.control}
               name="isActive"
