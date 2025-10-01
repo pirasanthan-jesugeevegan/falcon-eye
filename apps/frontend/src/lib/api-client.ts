@@ -1,14 +1,9 @@
 import { toast } from 'sonner';
+import type { ApiError } from '@/types';
 
 // Base URL for API calls
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/';
-
-export interface ApiError extends Error {
-  [x: string]: any;
-  status?: number;
-  code?: string;
-}
 
 class ApiClient {
   private baseURL: string;

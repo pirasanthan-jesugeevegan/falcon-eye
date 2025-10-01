@@ -1,8 +1,7 @@
 import * as crypto from 'crypto';
+import { ENCRYPTION_CONSTANTS } from '@falcon-eye/common';
 
-const ALGO = 'aes-256-gcm';
-const IV_LEN = 12; // recommended for GCM
-const AUTH_TAG_LEN = 16;
+const { ALGO, IV_LEN, AUTH_TAG_LEN } = ENCRYPTION_CONSTANTS;
 
 function getMasterKey(): string {
   const key = process.env.ENCRYPTION_KEY;

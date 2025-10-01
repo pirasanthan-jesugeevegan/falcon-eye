@@ -1,10 +1,21 @@
 {
-  "name": "common",
+  "name": "@falcon-eye/common",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
-  "main": "./dist/common.js",
-  "types": "./dist/main.d.ts",
+  "main": "./dist/common.cjs",
+  "module": "./dist/common.js",
+  "types": "./dist/src/main.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/main.d.ts",
+      "require": "./dist/common.cjs",
+      "import": "./dist/common.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

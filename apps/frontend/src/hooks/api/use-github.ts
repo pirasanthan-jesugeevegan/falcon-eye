@@ -2,27 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query-keys';
 import { apiClient, handleApiError } from '@/lib/api-client';
 import { toast } from 'sonner';
-import type { WorkflowInputSchema } from '@/types';
-
-// Define the GithubConfig type that was missing
-export interface GithubConfig {
-  id?: string;
-  owner: string;
-  repo: string;
-  workflow: string;
-  pat: string;
-  inputsSchema?: WorkflowInputSchema[];
-  defaultRef?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-// Define the response structure from backend PATCH operations
-export interface GithubConfigResponse {
-  success: boolean;
-  message: string;
-  config: GithubConfig;
-}
+import type { GithubConfig, GithubConfigResponse } from '@/types';
 
 // API functions
 export const githubApi = {

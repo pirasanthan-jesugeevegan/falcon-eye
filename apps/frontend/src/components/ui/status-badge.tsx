@@ -3,7 +3,7 @@ import { Badge } from './badge';
 import { CheckCircle, XCircle } from 'lucide-react';
 
 interface StatusBadgeProps {
-  status: 'healthy' | 'warning' | 'critical' | 'passed' | 'failed';
+  status: 'healthy' | 'warning' | 'critical' | 'passed' | 'failed' | 'skipped';
   children: React.ReactNode;
   className?: string;
 }
@@ -34,6 +34,8 @@ export function StatusBadge({ status, children, className }: StatusBadgeProps) {
             status === 'healthy',
           'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400':
             status === 'warning',
+          'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400':
+            status === 'skipped',
           'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400':
             status === 'critical',
         },

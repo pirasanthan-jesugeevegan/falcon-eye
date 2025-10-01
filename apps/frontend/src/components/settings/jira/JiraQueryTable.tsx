@@ -16,7 +16,8 @@ import {
 } from '@tanstack/react-table';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { JiraQueryModal } from './JiraQueryModal';
-import { useDeleteJiraQuery, type JiraQuery } from '@/hooks/api/use-jira';
+import { useDeleteJiraQuery } from '@/hooks/api/use-jira';
+import type { JiraQuery } from '@/types';
 import { toast } from 'sonner';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 

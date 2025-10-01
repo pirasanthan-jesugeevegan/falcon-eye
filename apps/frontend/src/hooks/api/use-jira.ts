@@ -1,19 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query-keys';
 import { apiClient, handleApiError } from '@/lib/api-client';
-import type { JiraAllIssuesResponse, JiraConfig, JiraIssue } from '@/types';
+import type {
+  JiraAllIssuesResponse,
+  JiraConfig,
+  JiraIssue,
+  JiraQuery,
+} from '@/types';
 import { toast } from 'sonner';
-
-// Define the JiraQuery type that was missing
-export interface JiraQuery {
-  id?: string;
-  jiraConfigId: string; // Reference to the JiraConfig
-  name: string;
-  jqlQuery: string;
-  description?: string;
-  isActive: boolean;
-  jiraConfig?: JiraConfig; // Optional - only returned from API, not required for creation
-}
 
 // API functions
 export const jiraApi = {

@@ -62,6 +62,9 @@ importers:
 
   apps/backend:
     dependencies:
+      '@falcon-eye/common':
+        specifier: workspace:*
+        version: link:../../packages/common
       '@nestjs/common':
         specifier: ^10.0.0
         version: 10.4.20(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -177,6 +180,9 @@ importers:
 
   apps/frontend:
     dependencies:
+      '@falcon-eye/common':
+        specifier: workspace:*
+        version: link:../../packages/common
       '@heroicons/react':
         specifier: ^2.2.0
         version: 2.2.0(react@19.1.1)
@@ -252,9 +258,6 @@ importers:
       cmdk:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      common:
-        specifier: workspace:*
-        version: link:../../packages/common
       framer-motion:
         specifier: ^12.23.12
         version: 12.23.12(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
