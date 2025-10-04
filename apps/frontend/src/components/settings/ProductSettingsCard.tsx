@@ -29,7 +29,9 @@ export function ProductSettingsCard() {
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="font-medium text-lg">JIRA Configurations</h3>
+            <h3 className="font-medium text-lg">
+              Product / Service Configurations
+            </h3>
             <ProductModal
               trigger={
                 <Button>
