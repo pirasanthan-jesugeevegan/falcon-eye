@@ -1,7 +1,7 @@
 import { toast } from 'sonner';
 import type { ApiError } from '@/types';
 
-// Base URL for API calls
+// Base URL for API calls (no trailing slash)
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/';
 
@@ -91,7 +91,7 @@ class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient(API_BASE_URL + 'api');
+export const apiClient = new ApiClient(API_BASE_URL);
 
 // Global error handler for API calls
 export const handleApiError = (error: unknown) => {
