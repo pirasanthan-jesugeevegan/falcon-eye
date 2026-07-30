@@ -84,6 +84,7 @@ export const useUpdateSonarCloudConfig = () => {
         },
       );
       toast.success('SonarCloud configuration updated successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.sonarCloud.all });
     },
     onError: handleApiError,
   });
@@ -110,6 +111,7 @@ export const usePatchSonarCloudConfig = () => {
         },
       );
       toast.success('SonarCloud configuration updated successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.sonarCloud.all });
     },
     onError: handleApiError,
   });
@@ -130,6 +132,7 @@ export const useDeleteSonarCloudConfig = () => {
         },
       );
       toast.success('SonarCloud config deleted successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.sonarCloud.all });
     },
     onError: handleApiError,
   });
@@ -167,6 +170,7 @@ export const useCreateSonarCloudQuery = () => {
         },
       );
       toast.success('SonarCloud query created successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.sonarCloud.all });
     },
     onError: handleApiError,
   });
@@ -187,6 +191,7 @@ export const useUpdateSonarCloudQuery = () => {
         },
       );
       toast.success('SonarCloud query updated successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.sonarCloud.all });
     },
     onError: handleApiError,
   });
@@ -213,6 +218,7 @@ export const usePatchSonarCloudQuery = () => {
         },
       );
       toast.success('SonarCloud query updated successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.sonarCloud.all });
     },
     onError: handleApiError,
   });
@@ -233,6 +239,7 @@ export const useDeleteSonarCloudQuery = () => {
         },
       );
       toast.success('SonarCloud query deleted successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.sonarCloud.all });
     },
     onError: handleApiError,
   });

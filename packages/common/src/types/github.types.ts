@@ -6,6 +6,7 @@ export interface WorkflowInputOption {
 export interface WorkflowInputSchema {
   name: string;
   type: 'string' | 'select' | 'boolean' | 'number';
+  required?: boolean;
   defaultValue?: string;
   placeholder?: string;
   options?: WorkflowInputOption[];

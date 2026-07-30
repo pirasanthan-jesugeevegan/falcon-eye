@@ -51,6 +51,8 @@ export const useCreateProduct = () => {
         },
       );
       toast.success('Product created successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.testResults.all });
     },
     onError: handleApiError,
   });
@@ -76,6 +78,8 @@ export const useUpdateProduct = () => {
         },
       );
       toast.success('Product updated successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.testResults.all });
     },
     onError: handleApiError,
   });
@@ -96,6 +100,8 @@ export const useDeleteProduct = () => {
         },
       );
       toast.success('Product deleted successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.testResults.all });
     },
     onError: handleApiError,
   });

@@ -16,19 +16,44 @@ import { calculateAverageTestCoverage } from '@/lib/utils';
 
 export function DashboardPage() {
   const {
-    data: issues,
+    data: rawIssues,
     isLoading: issuesLoading,
     error: issuesError,
   } = useAllJiraIssues();
 
+  const issues = rawIssues
+    ? {
+        ...rawIssues,
+        queries: rawIssues.queries?.filter(q => q.isActive !== false),
+        results: rawIssues.results?.filter(
+          r =>
+            rawIssues.queries?.find(q => q.name === r.queryName)?.isActive !==
+            false,
+        ),
+      }
+    : undefined;
+
   const {
-    data: products,
+    data: allProducts,
     isLoading: productsLoading,
     error: productsError,
   } = useProducts();
+  const products = allProducts?.filter(p => p.isActive !== false);
 
-  const { data: sonarCloudData, isLoading: sonarCloudLoading } =
+  const { data: rawSonarCloudData, isLoading: sonarCloudLoading } =
     useAllSonarCloudIssues();
+
+  const sonarCloudData = rawSonarCloudData
+    ? {
+        ...rawSonarCloudData,
+        queries: rawSonarCloudData.queries?.filter(q => q.isActive !== false),
+        results: rawSonarCloudData.results?.filter(
+          r =>
+            rawSonarCloudData.queries?.find(q => q.name === r.queryName)
+              ?.isActive !== false,
+        ),
+      }
+    : undefined;
 
   const {
     allUnitResults,

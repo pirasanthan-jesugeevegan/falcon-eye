@@ -4,6 +4,7 @@ import {
   IsArray,
   ValidateNested,
   IsNotEmpty,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -34,6 +35,10 @@ export class WorkflowInputSchema {
   @ValidateNested({ each: true })
   @Type(() => WorkflowInputOption)
   options?: WorkflowInputOption[];
+
+  @IsOptional()
+  @IsBoolean()
+  required?: boolean;
 
   @IsOptional()
   @IsString()

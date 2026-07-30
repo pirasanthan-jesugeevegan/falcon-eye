@@ -69,6 +69,7 @@ export const useUpdateJiraConfig = () => {
         },
       );
       toast.success('Jira configuration updated successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.jira.all });
     },
     onError: handleApiError,
   });
@@ -90,6 +91,7 @@ export const usePatchJiraConfig = () => {
         },
       );
       toast.success('Jira configuration updated successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.jira.all });
     },
     onError: handleApiError,
   });
@@ -110,6 +112,7 @@ export const useDeleteJiraConfig = () => {
         },
       );
       toast.success('JIRA config deleted successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.jira.all });
     },
     onError: handleApiError,
   });
@@ -147,6 +150,7 @@ export const useCreateJiraQuery = () => {
         },
       );
       toast.success('JIRA query created successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.jira.all });
     },
     onError: handleApiError,
   });
@@ -167,6 +171,7 @@ export const useUpdateJiraQuery = () => {
         },
       );
       toast.success('JIRA query updated successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.jira.all });
     },
     onError: handleApiError,
   });
@@ -188,6 +193,7 @@ export const usePatchJiraQuery = () => {
         },
       );
       toast.success('JIRA query updated successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.jira.all });
     },
     onError: handleApiError,
   });
@@ -208,6 +214,7 @@ export const useDeleteJiraQuery = () => {
         },
       );
       toast.success('JIRA query deleted successfully');
+      queryClient.invalidateQueries({ queryKey: queryKeys.jira.all });
     },
     onError: handleApiError,
   });

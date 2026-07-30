@@ -59,7 +59,11 @@ export function SonarCloudOverviewCards({
       />
       <OverviewCard
         title="Security Review Status"
-        value={securityHotspotsReviewed ? Number(securityHotspotsReviewed) : 0}
+        value={
+          securityHotspotsReviewed
+            ? Math.round(Number(securityHotspotsReviewed) * 10) / 10
+            : 0
+        }
         description="hotspots reviewed"
         icon={
           <ShieldAlert

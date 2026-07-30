@@ -165,27 +165,27 @@ const generateFormSchema = (inputsSchema: WorkflowInputSchema[]) => {
   inputsSchema.forEach(input => {
     switch (input.type) {
       case 'string':
-        schemaFields[input.name] = z
-          .string()
-          .min(1, { message: `${input.name} is required` });
+        schemaFields[input.name] = input.required
+          ? z.string().min(1, { message: `${input.name} is required` })
+          : z.string().optional();
         break;
       case 'number':
-        schemaFields[input.name] = z
-          .string()
-          .min(1, { message: `${input.name} is required` });
+        schemaFields[input.name] = input.required
+          ? z.string().min(1, { message: `${input.name} is required` })
+          : z.string().optional();
         break;
       case 'boolean':
         schemaFields[input.name] = z.boolean().optional();
         break;
       case 'select':
-        schemaFields[input.name] = z
-          .string()
-          .min(1, { message: `${input.name} is required` });
+        schemaFields[input.name] = input.required
+          ? z.string().min(1, { message: `${input.name} is required` })
+          : z.string().optional();
         break;
       default:
-        schemaFields[input.name] = z
-          .string()
-          .min(1, { message: `${input.name} is required` });
+        schemaFields[input.name] = input.required
+          ? z.string().min(1, { message: `${input.name} is required` })
+          : z.string().optional();
     }
   });
 
@@ -210,7 +210,10 @@ const DynamicFormField = ({
           name={name}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{input.name}</FormLabel>
+              <FormLabel>
+                {input.name}
+                {input.required && <span className="text-red-500">*</span>}
+              </FormLabel>
               <Select
                 onValueChange={field.onChange}
                 defaultValue={field.value || input.defaultValue}
@@ -262,7 +265,10 @@ const DynamicFormField = ({
           name={name}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{input.name}</FormLabel>
+              <FormLabel>
+                {input.name}
+                {input.required && <span className="text-red-500">*</span>}
+              </FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -283,7 +289,10 @@ const DynamicFormField = ({
           name={name}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{input.name}</FormLabel>
+              <FormLabel>
+                {input.name}
+                {input.required && <span className="text-red-500">*</span>}
+              </FormLabel>
               <FormControl>
                 <Input
                   placeholder={input.placeholder || input.name}
@@ -671,15 +680,17 @@ export function WorkflowTrigger() {
                     {/* Dynamic form fields based on inputsSchema */}
                     {selectedConfig.inputsSchema &&
                     selectedConfig.inputsSchema.length > 0 ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {selectedConfig.inputsSchema.map(input => (
-                          <DynamicFormField
-                            key={input.name}
-                            input={input}
-                            control={form.control}
-                            name={input.name}
-                          />
-                        ))}
+                      <div className="space-y-4 mx-auto">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                          {selectedConfig.inputsSchema.map(input => (
+                            <DynamicFormField
+                              key={input.name}
+                              input={input}
+                              control={form.control}
+                              name={input.name}
+                            />
+                          ))}
+                        </div>
                       </div>
                     ) : (
                       <Alert>
@@ -692,12 +703,10 @@ export function WorkflowTrigger() {
                       </Alert>
                     )}
 
-                    <Alert className="bg-blue-50 border-blue-200">
-                      <AlertTriangle className="h-4 w-4 text-blue-600" />
-                      <AlertTitle className="text-blue-800">
-                        Workflow Information
-                      </AlertTitle>
-                      <AlertDescription className="text-blue-700">
+                    <Alert className="bg-muted/50 border-border">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertTitle>Workflow Information</AlertTitle>
+                      <AlertDescription>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2 text-sm">
                           <div>
                             <strong>Repository:</strong> {selectedConfig.owner}/

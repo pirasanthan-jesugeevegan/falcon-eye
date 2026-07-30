@@ -13,6 +13,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -50,6 +51,8 @@ const workflowInputSchemaSchema = z.object({
   name: z.string().min(1, { message: 'Name is required.' }),
   type: z.enum(['string', 'select', 'boolean', 'number']),
   defaultValue: z.string().optional(),
+  placeholder: z.string().optional(),
+  required: z.boolean().optional(),
   options: z.array(workflowInputOptionSchema).optional(),
 });
 
@@ -107,6 +110,7 @@ export function GithubConfigModal({
     append({
       name: '',
       type: 'string' as const,
+      required: true,
       options: [{ value: '', label: '' }],
     });
   };
@@ -137,6 +141,7 @@ export function GithubConfigModal({
           {
             name: '',
             type: 'string' as const,
+            required: true,
             options: [{ value: '', label: '' }],
           },
         ],
@@ -210,7 +215,7 @@ export function GithubConfigModal({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
             {' '}
@@ -355,6 +360,13 @@ export function GithubConfigModal({
                           <span className="text-sm font-medium">
                             {configForm.watch(`inputsSchema.${index}.name`) ||
                               `Input ${index + 1}`}
+                            {configForm.watch(
+                              `inputsSchema.${index}.required`,
+                            ) && (
+                              <span className="text-red-500 ml-1 font-bold">
+                                *
+                              </span>
+                            )}
                           </span>
                           <Button
                             type="button"
@@ -371,13 +383,13 @@ export function GithubConfigModal({
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="px-3 pb-3 space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-2 gap-4">
                           <FormField
                             control={configForm.control}
                             name={`inputsSchema.${index}.name`}
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm">Name</FormLabel>
+                                <FormLabel className="text-xs">Name</FormLabel>
                                 <FormControl>
                                   <Input placeholder="env" {...field} />
                                 </FormControl>
@@ -385,13 +397,12 @@ export function GithubConfigModal({
                               </FormItem>
                             )}
                           />
-
                           <FormField
                             control={configForm.control}
                             name={`inputsSchema.${index}.type`}
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-sm">Type</FormLabel>
+                                <FormLabel className="text-xs">Type</FormLabel>
                                 <Select
                                   onValueChange={field.onChange}
                                   value={field.value}
@@ -421,6 +432,24 @@ export function GithubConfigModal({
                             )}
                           />
                         </div>
+
+                        <FormField
+                          control={configForm.control}
+                          name={`inputsSchema.${index}.required`}
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value}
+                                  onCheckedChange={field.onChange}
+                                />
+                              </FormControl>
+                              <FormLabel className="text-xs font-normal cursor-pointer">
+                                This input is required
+                              </FormLabel>
+                            </FormItem>
+                          )}
+                        />
 
                         {/* Options for select type only */}
                         {configForm.watch(`inputsSchema.${index}.type`) ===

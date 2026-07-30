@@ -89,17 +89,17 @@ export function SonarCloudPullRequestsTable({
         return hasIssues ? (
           <div className="flex gap-2">
             {bugs > 0 && (
-              <Badge variant="outline" className="bg-red-50">
+              <Badge variant="outline">
                 <Bug className="h-3 w-3 mr-1" /> {bugs}
               </Badge>
             )}
             {vulnerabilities > 0 && (
-              <Badge variant="outline" className="bg-orange-50">
+              <Badge variant="outline">
                 <ShieldAlert className="h-3 w-3 mr-1" /> {vulnerabilities}
               </Badge>
             )}
             {codeSmells > 0 && (
-              <Badge variant="outline" className="bg-yellow-50">
+              <Badge variant="outline">
                 <Code2 className="h-3 w-3 mr-1" /> {codeSmells}
               </Badge>
             )}
