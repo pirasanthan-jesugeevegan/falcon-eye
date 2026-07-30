@@ -13,22 +13,22 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 
-const SettingsLazyRouteImport = createFileRoute('/settings')()
 const GithubWorkflowLazyRouteImport = createFileRoute('/githubWorkflow')()
-const SonarCloudSonarCloudIdLazyRouteImport = createFileRoute(
-  '/sonarCloud/$sonarCloudId',
-)()
+const SettingsLazyRouteImport = createFileRoute('/settings')()
+const InfraInfraIdLazyRouteImport = createFileRoute('/infra/$infraId')()
+const JiraJiraIdLazyRouteImport = createFileRoute('/jira/$jiraId')()
 const ProductsProductIdLazyRouteImport = createFileRoute(
   '/products/$productId',
 )()
-const JiraJiraIdLazyRouteImport = createFileRoute('/jira/$jiraId')()
-const InfraInfraIdLazyRouteImport = createFileRoute('/infra/$infraId')()
+const SonarCloudSonarCloudIdLazyRouteImport = createFileRoute(
+  '/sonarCloud/$sonarCloudId',
+)()
 
-const SettingsLazyRoute = SettingsLazyRouteImport.update({
-  id: '/settings',
-  path: '/settings',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/settings.lazy').then((d) => d.Route))
+} as any)
 const GithubWorkflowLazyRoute = GithubWorkflowLazyRouteImport.update({
   id: '/githubWorkflow',
   path: '/githubWorkflow',
@@ -36,11 +36,30 @@ const GithubWorkflowLazyRoute = GithubWorkflowLazyRouteImport.update({
 } as any).lazy(() =>
   import('./routes/githubWorkflow.lazy').then((d) => d.Route),
 )
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const SettingsLazyRoute = SettingsLazyRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any).lazy(() => import('./routes/settings.lazy').then((d) => d.Route))
+const InfraInfraIdLazyRoute = InfraInfraIdLazyRouteImport.update({
+  id: '/infra/$infraId',
+  path: '/infra/$infraId',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/infra/$infraId.lazy').then((d) => d.Route),
+)
+const JiraJiraIdLazyRoute = JiraJiraIdLazyRouteImport.update({
+  id: '/jira/$jiraId',
+  path: '/jira/$jiraId',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/jira/$jiraId.lazy').then((d) => d.Route))
+const ProductsProductIdLazyRoute = ProductsProductIdLazyRouteImport.update({
+  id: '/products/$productId',
+  path: '/products/$productId',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() =>
+  import('./routes/products/$productId.lazy').then((d) => d.Route),
+)
 const SonarCloudSonarCloudIdLazyRoute =
   SonarCloudSonarCloudIdLazyRouteImport.update({
     id: '/sonarCloud/$sonarCloudId',
@@ -49,25 +68,6 @@ const SonarCloudSonarCloudIdLazyRoute =
   } as any).lazy(() =>
     import('./routes/sonarCloud/$sonarCloudId.lazy').then((d) => d.Route),
   )
-const ProductsProductIdLazyRoute = ProductsProductIdLazyRouteImport.update({
-  id: '/products/$productId',
-  path: '/products/$productId',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() =>
-  import('./routes/products/$productId.lazy').then((d) => d.Route),
-)
-const JiraJiraIdLazyRoute = JiraJiraIdLazyRouteImport.update({
-  id: '/jira/$jiraId',
-  path: '/jira/$jiraId',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/jira/$jiraId.lazy').then((d) => d.Route))
-const InfraInfraIdLazyRoute = InfraInfraIdLazyRouteImport.update({
-  id: '/infra/$infraId',
-  path: '/infra/$infraId',
-  getParentRoute: () => rootRouteImport,
-} as any).lazy(() =>
-  import('./routes/infra/$infraId.lazy').then((d) => d.Route),
-)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -139,11 +139,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsLazyRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/githubWorkflow': {
@@ -153,25 +153,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GithubWorkflowLazyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsLazyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sonarCloud/$sonarCloudId': {
-      id: '/sonarCloud/$sonarCloudId'
-      path: '/sonarCloud/$sonarCloudId'
-      fullPath: '/sonarCloud/$sonarCloudId'
-      preLoaderRoute: typeof SonarCloudSonarCloudIdLazyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/products/$productId': {
-      id: '/products/$productId'
-      path: '/products/$productId'
-      fullPath: '/products/$productId'
-      preLoaderRoute: typeof ProductsProductIdLazyRouteImport
+    '/infra/$infraId': {
+      id: '/infra/$infraId'
+      path: '/infra/$infraId'
+      fullPath: '/infra/$infraId'
+      preLoaderRoute: typeof InfraInfraIdLazyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/jira/$jiraId': {
@@ -181,11 +174,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JiraJiraIdLazyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/infra/$infraId': {
-      id: '/infra/$infraId'
-      path: '/infra/$infraId'
-      fullPath: '/infra/$infraId'
-      preLoaderRoute: typeof InfraInfraIdLazyRouteImport
+    '/products/$productId': {
+      id: '/products/$productId'
+      path: '/products/$productId'
+      fullPath: '/products/$productId'
+      preLoaderRoute: typeof ProductsProductIdLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sonarCloud/$sonarCloudId': {
+      id: '/sonarCloud/$sonarCloudId'
+      path: '/sonarCloud/$sonarCloudId'
+      fullPath: '/sonarCloud/$sonarCloudId'
+      preLoaderRoute: typeof SonarCloudSonarCloudIdLazyRouteImport
       parentRoute: typeof rootRouteImport
     }
   }

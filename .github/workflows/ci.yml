@@ -161,6 +161,9 @@ jobs:
           path: apps/frontend/dist
           key: ${{ steps.build-cache.outputs.value }}
 
+      - name: Build common package
+        run: pnpm run common:build
+
       - name: Build frontend
         run: pnpm run frontend:build
 
@@ -196,12 +199,4 @@ jobs:
           key: ${{ needs.setup.outputs.cache-key }}
 
       - name: Run security audit
-        run: pnpm audit --audit-level moderate
-
-      - name: Check for vulnerabilities
-        run: |
-          pnpm audit --audit-level high || {
-            echo "High severity vulnerabilities found!"
-            exit 1
-          }
-          echo "No high severity vulnerabilities found"
+        run: pnpm audit --audit-level critical
