@@ -2,9 +2,9 @@
   "name": "@falcon-eye/backend",
   "version": "0.0.1",
   "description": "QA Monitoring Tool Backend API",
-  "author": "",
+  "author": "Pirasanthan Jesugeevegan",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

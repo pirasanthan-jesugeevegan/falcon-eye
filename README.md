@@ -216,4 +216,8 @@ pnpm -w run backend:migration:run
 
 ## License
 
-UNLICENSED - Private project
+Copyright (c) 2026 Pirasanthan Jesugeevegan. All rights reserved.
+
+See [LICENSE](LICENSE). The Author retains ownership. Organizations given
+this repository (including as a GitHub template) may use and modify it for
+internal business and product development under the terms in that file.

@@ -2,8 +2,9 @@
   "name": "@falcon-eye/frontend",
   "version": "0.0.1",
   "description": "Falcon Eye Frontend",
-  "author": "",
+  "author": "Pirasanthan Jesugeevegan",
   "private": true,
+  "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "scripts": {
     "dev": "vite",
