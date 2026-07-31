@@ -1,223 +1,186 @@
 # Falcon Eye
 
-A comprehensive QA Monitoring Tool for tracking test results, integrating with Jira, SonarCloud, and GitHub workflows.
+Falcon Eye is a QA monitoring dashboard for products, test results, Jira,
+SonarCloud, GitHub Actions, and infrastructure dashboards.
 
-## Tech Stack
+## Stack
 
-- **Backend**: NestJS, TypeORM, PostgreSQL
-- **Frontend**: React, Vite, TanStack Router, TanStack Query
-- **Infrastructure**: SST (Serverless Stack)
-- **Package Manager**: pnpm (monorepo workspace)
-- **Node Version**: 20.x
+- NestJS, TypeORM, and PostgreSQL
+- React, Vite, TanStack Router, and TanStack Query
+- SST v3 on AWS
+- pnpm workspaces and Node.js 20
 
-## Prerequisites
+## Use this template
 
-- Node.js 20.x (see `.nvmrc`)
-- pnpm 10.x or higher
-- PostgreSQL database (local or remote)
+1. Select **Use this template** on GitHub and create a repository.
+2. Clone the new repository.
+3. Replace the project name, package scope, branding, and license if needed.
+4. Follow the local setup below.
+5. Configure AWS only if you want SST deployments.
 
-## Project Structure
+Repositories created from this template have independent history, issues,
+secrets, and deployment configuration.
 
-```
-falcon-eye/
-├── apps/
-│   ├── backend/          # NestJS API
-│   └── frontend/         # React frontend
-├── infra/                # SST infrastructure configuration
-├── packages/
-│   └── common/           # Shared utilities
-├── .env                  # Environment variables (root level)
-└── package.json          # Root workspace configuration
-```
+## Local setup
 
-## Getting Started
+### Prerequisites
 
-### 1. Install Dependencies
+- Node.js 20 (see `.nvmrc`)
+- pnpm 10
+- PostgreSQL
+
+### Install
 
 ```bash
 pnpm install
+cp .env.example .env
+cp apps/frontend/.env.example apps/frontend/.env.local
 ```
 
-### 2. Environment Setup
-
-Create a `.env` file in the **root directory** with the following variables:
-
-```bash
-# Environment
-NODE_ENV=development
-
-# Server
-PORT=3000
-
-# Database
-DB_HOST=your-db-host
-DB_PORT=5432
-DB_USERNAME=your-username
-DB_PASSWORD=your-password
-DB_NAME=your-database
-
-# Encryption Key (32 bytes base64 encoded)
-ENCRYPTION_KEY=your-base64-encoded-key
-```
-
-**Important**: The `.env` file must be at the root level, not in `apps/backend/`.
-
-#### Generating an Encryption Key
-
-To generate a secure encryption key for `ENCRYPTION_KEY`:
+Fill in the database credentials in `.env`, then generate a unique encryption
+key:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
-### 3. Database Setup
+Store the output as `ENCRYPTION_KEY` in `.env`. Never reuse the example or
+commit this value.
 
-Run migrations to create database tables:
+### Database
 
-```bash
-pnpm -w run backend:migration:run
-```
-
-To generate a new migration after changing entities:
+Create the database named by `DB_NAME`, then run:
 
 ```bash
-pnpm -w run backend:migration:generate src/database/migrations/YourMigrationName
+pnpm backend:migration:run
+pnpm backend:seed # optional example data
 ```
 
-To revert the last migration:
+`DB_SSL=false` works for a typical local PostgreSQL server. Set it to `true`
+for providers that require TLS. Schema synchronization is disabled by default;
+use migrations, or set `DB_SYNCHRONIZE=true` only for a disposable local
+database.
 
-```bash
-cd apps/backend && pnpm migration:revert
-```
-
-### 4. Running the Application
-
-#### Development Mode
-
-Run both backend and frontend concurrently:
+### Run
 
 ```bash
 pnpm dev
 ```
 
-Or run them separately:
+- Frontend: http://localhost:5173
+- Backend: http://localhost:3000
+
+The local backend has no `/api` prefix. The deployed Lambda uses `/api`, so a
+deployed frontend base URL must include that prefix.
+
+## Environment variables
+
+Backend variables live in the root `.env`; see `.env.example`.
+
+| Variable                                                      | Purpose                                                               |
+| ------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `NODE_ENV`                                                    | Runtime environment                                                   |
+| `PORT`                                                        | Local API port                                                        |
+| `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME` | PostgreSQL connection                                                 |
+| `DB_SSL`                                                      | Enable PostgreSQL TLS                                                 |
+| `DB_SYNCHRONIZE`                                              | Optional TypeORM schema sync; keep false outside disposable databases |
+| `ENCRYPTION_KEY`                                              | Base64-encoded 32-byte key for stored integration credentials         |
+| `ALLOWED_ORIGINS`                                             | Comma-separated browser origins accepted by the API                   |
+| `LOG_LEVEL`                                                   | Backend log level                                                     |
+
+Frontend variables live in `apps/frontend/.env.local`; see
+`apps/frontend/.env.example`.
+
+| Variable            | Purpose                                |
+| ------------------- | -------------------------------------- |
+| `VITE_API_BASE_URL` | API base URL, without a trailing slash |
+
+## Commands
 
 ```bash
-# Backend only
-pnpm backend:start
-
-# Frontend only
-pnpm frontend:start
+pnpm dev                 # frontend and backend
+pnpm build               # all workspace packages
+pnpm lint                # lint the monorepo
+pnpm backend:test        # backend unit tests
+pnpm backend:migration:run
+pnpm backend:migration:generate src/database/migrations/Name
+pnpm backend:migration:revert
+pnpm backend:seed
 ```
 
-#### Production Build
+## AWS deployment (optional)
+
+SST deploys a VPC, PostgreSQL database, Lambda API, and static frontend. AWS
+resources can incur charges.
+
+Authenticate the AWS CLI, then set stage-specific SST secrets:
 
 ```bash
-pnpm build
+cd infra
+pnpm exec sst secret set EncryptionKey '<generated-key>' --stage dev
+pnpm exec sst secret set AllowedOrigins 'https://your-frontend.example.com' --stage dev
+pnpm run deploy:sst --stage dev
 ```
 
-## Available Scripts
+Set `SST_APP_NAME` to customize the default `falcon-eye` AWS resource prefix.
+The default AWS region is `eu-west-2`; change it in `infra/sst.config.ts` if
+needed.
 
-All scripts should be run from the **root directory** using `pnpm -w run` or the shortcuts below:
+If you use the generated SST frontend URL rather than a known custom domain,
+deploy once with a temporary origin, copy the `frontendUrl` output, update the
+`AllowedOrigins` secret to that exact origin, and deploy again.
 
-### Backend
-
-- `pnpm backend:start` - Start backend in watch mode
-- `pnpm backend:build` - Build backend
-- `pnpm backend:test` - Run backend tests
-- `pnpm -w run backend:migration:generate <name>` - Generate new migration
-- `pnpm -w run backend:migration:run` - Run pending migrations
-- `pnpm backend:seed` - Seed database with initial data
-
-### Frontend
-
-- `pnpm frontend:start` - Start frontend dev server
-- `pnpm frontend:build` - Build frontend for production
-- `pnpm frontend:preview` - Preview production build
-
-### Infrastructure
-
-- `pnpm dev:infra` - Start SST dev mode
-- `pnpm deploy:infra` - Deploy infrastructure to AWS
-- `pnpm remove:infra` - Remove deployed infrastructure
-
-### Code Quality
-
-- `pnpm lint` - Lint all code
-- `pnpm format` - Format all code with Prettier
-
-## Important Notes
-
-### Environment Variables
-
-- The `.env` file **must** be in the root directory
-- Both `app.module.ts` and `ormconfig.ts` are configured to load from the root `.env`
-- Never commit `.env` to version control (use `example.env` as a template)
-
-### Running Commands
-
-- Use `pnpm -w run` prefix for workspace root scripts
-- Backend-specific commands can be run with `cd apps/backend && pnpm <command>`
-- Frontend-specific commands can be run with `cd apps/frontend && pnpm <command>`
-
-### Migrations
-
-- Migrations are auto-generated from TypeORM entities
-- Always review generated migrations before running
-- Migration files are located in `apps/backend/src/database/migrations/`
-- The database connection uses the `DATABASE_URL` from `.env`
-
-### Encryption
-
-- Sensitive data (API tokens, passwords) are encrypted using AES-256-GCM
-- The `ENCRYPTION_KEY` must be a 32-byte base64-encoded string
-- Encryption utilities are in `apps/backend/src/crypto.util.ts`
-
-## Troubleshooting
-
-### "ENCRYPTION_KEY not set" Error
-
-Ensure your `.env` file is in the root directory and contains a valid `ENCRYPTION_KEY`.
-
-### TypeScript "Cannot find name 'Buffer'" Error
-
-If you see this error, restart your TypeScript server:
-
-- VS Code: `Cmd+Shift+P` → "TypeScript: Restart TS Server"
-
-### Migration Errors
-
-If migrations fail, check:
-
-1. Database is accessible (check `DATABASE_URL`)
-2. `.env` file is in the root directory
-3. Migration order is correct (foreign keys created after tables)
-
-To start fresh:
+To remove a stage:
 
 ```bash
-# Drop all tables manually in your database, then:
-pnpm -w run backend:migration:run
+cd infra
+STAGE=dev ./remove-all.sh
 ```
 
-### Database Connection Issues
+`sst remove` alone often stalls on VPC/RDS/NAT dependency chains. `remove-all.sh`
+tries SST first, then deletes only resources tagged for that app and stage.
+Set `SST_APP_NAME` if you customized the stack name.
 
-- Verify your database credentials in `.env`
-- For remote databases, ensure SSL settings match your provider
-- Check that the database accepts connections from your IP
+The GitHub deployment workflows are manual by design, so a repository created
+from this template does not deploy automatically. Before using them, configure
+the `preview` and `production` GitHub environments with:
+
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `ENCRYPTION_KEY`
+- `ALLOWED_ORIGINS`
+
+Both workflows set `SST_APP_NAME=falcon-eye`. If you change the SST app name,
+update that value in the workflow files, `infra/sst.config.ts`, and
+`infra/remove-all.sh` together. Existing stacks named `pj-falcon-eye-stack`
+need `SST_APP_NAME=pj-falcon-eye-stack` until they are rebuilt.
+
+## Security
+
+- Never commit `.env`, `.env.local`, API tokens, or generated encryption keys.
+- Rotate credentials immediately if they appear in git history or logs.
+- The API currently has no authentication layer. Do not expose it publicly
+  without adding authentication and authorization.
+- Restrict `ALLOWED_ORIGINS` to trusted frontend origins.
+
+## Project structure
+
+```text
+apps/backend/       NestJS API
+apps/frontend/      React application
+packages/common/    Shared types and utilities
+infra/              SST infrastructure
+docs/               Project documentation
+```
 
 ## Contributing
 
-1. Create a feature branch from `master`
-2. Make your changes
-3. Run linting and tests
-4. Commit using conventional commits
-5. Create a pull request
+Run `pnpm lint`, `pnpm backend:test`, and `pnpm build` before opening a pull
+request. Commit messages follow Conventional Commits.
 
 ## License
 
 Copyright (c) 2026 Pirasanthan Jesugeevegan. All rights reserved.
 
-See [LICENSE](LICENSE). The Author retains ownership. Organizations given
-this repository (including as a GitHub template) may use and modify it for
-internal business and product development under the terms in that file.
+See [LICENSE](LICENSE). Use of this repository, including as a GitHub template,
+is governed by that license.

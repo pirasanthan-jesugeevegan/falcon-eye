@@ -1,4 +1,7 @@
 export function createBackendStack(db: sst.aws.Postgres, vpc: sst.aws.Vpc) {
+  const encryptionKey = new sst.Secret('EncryptionKey');
+  const allowedOrigins = new sst.Secret('AllowedOrigins');
+
   // Create the Lambda function for the NestJS API
   const api = new sst.aws.Function('NestJSAPI', {
     handler: '../apps/backend/dist/src/lambda.handler',
@@ -9,20 +12,28 @@ export function createBackendStack(db: sst.aws.Postgres, vpc: sst.aws.Vpc) {
     environment: {
       NODE_ENV: 'production',
       LOG_LEVEL: 'info',
-      ALLOWED_ORIGINS: '*',
+      ALLOWED_ORIGINS: allowedOrigins.value,
       DB_HOST: db.host,
       DB_PORT: db.port.toString(),
       DB_USERNAME: db.username,
       DB_PASSWORD: db.password,
       DB_NAME: db.database,
-      ENCRYPTION_KEY: 'rJ8/xQ2K9mN5vP7wB3fC8dE6gH1iL4mO7qR9sT2uV5x=',
+      // RDS requires TLS. Local/dev uses DB_SSL from .env instead.
+      DB_SSL: 'true',
+      ENCRYPTION_KEY: encryptionKey.value,
     },
     url: {
       cors: {
-        allowCredentials: true,
+        allowCredentials: false,
         allowHeaders: ['*'],
         allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-        allowOrigins: ['*'],
+        // Secret may be a single origin or a comma-separated list.
+        allowOrigins: allowedOrigins.value.apply(value =>
+          value
+            .split(',')
+            .map(origin => origin.trim())
+            .filter(Boolean),
+        ),
       },
     },
     nodejs: {
@@ -49,6 +60,6 @@ export function createBackendStack(db: sst.aws.Postgres, vpc: sst.aws.Vpc) {
 
   return {
     api,
-    url: api.url,
+    url: api.url.apply(url => `${url.replace(/\/$/, '')}/api`),
   };
 }

@@ -1,16 +1,30 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e
+# SST remove often fails partway through VPC/RDS/NAT dependency chains.
+# This script tries SST first, then deletes only resources that belong to
+# this app+stage. It intentionally does not sweep the whole AWS account.
+set -euo pipefail
 export AWS_PAGER=""
 
-STACK_NAME="pj-falcon-eye-stack"
-STAGE="${STAGE:-pirasanthanjesugeevegan}"
+export SST_APP_NAME="${SST_APP_NAME:-falcon-eye}"
+export STAGE="${STAGE:-dev}"
+STACK_NAME="$SST_APP_NAME"
 FULL_STACK_NAME="${STACK_NAME}-${STAGE}"
 
-echo "🚀 Starting full cleanup for SST stack: $FULL_STACK_NAME"
+echo "Starting full cleanup for SST stack: $FULL_STACK_NAME"
 
-command -v aws >/dev/null || { echo "❌ AWS CLI not installed."; exit 1; }
-command -v sst >/dev/null || { echo "⚠️ SST not found. Installing..."; npm install -g sst; }
+command -v aws >/dev/null || { echo "AWS CLI not installed."; exit 1; }
+command -v pnpm >/dev/null || { echo "pnpm not installed."; exit 1; }
+
+# aws --output text sometimes prints "None" for empty results
+normalize_aws_list() {
+  local value="${1:-}"
+  if [ -z "$value" ] || [ "$value" = "None" ] || [ "$value" = "null" ]; then
+    printf ''
+  else
+    printf '%s' "$value"
+  fi
+}
 
 # Function to wait for RDS deletion
 wait_for_rds_deletion() {
@@ -36,19 +50,22 @@ wait_for_rds_deletion() {
 
 # Try SST remove first
 echo "📋 Step 1: SST remove"
-if sst remove --stage "$STAGE"; then
+if pnpm exec sst remove --stage "$STAGE"; then
   echo "✅ SST removed everything cleanly."
   exit 0
 fi
 
 echo "⚠️ SST remove failed. Proceeding with manual cleanup..."
 echo "⚠️  Note: Manual cleanup may cause Pulumi state to become out of sync."
-echo "⚠️  Run 'sst refresh --stage $STAGE' after cleanup if you encounter deployment issues."
+echo "⚠️  Run 'pnpm exec sst refresh --stage $STAGE' after cleanup if you encounter deployment issues."
+
+# Keep going through dependency-ordered cleanup even if one delete fails.
+set +e
 
 # RDS
 echo "📋 Step 2: RDS instances"
-RDS_INSTANCES=$(aws rds describe-db-instances \
-  --query "DBInstances[?contains(DBInstanceIdentifier, '${STACK_NAME}-${STAGE}')].DBInstanceIdentifier" --output text 2>/dev/null || echo "")
+RDS_INSTANCES=$(normalize_aws_list "$(aws rds describe-db-instances \
+  --query "DBInstances[?contains(DBInstanceIdentifier, '${STACK_NAME}-${STAGE}')].DBInstanceIdentifier" --output text 2>/dev/null || true)")
 if [ -n "$RDS_INSTANCES" ]; then
   for instance in $RDS_INSTANCES; do
     echo "Deleting RDS: $instance"
@@ -65,8 +82,8 @@ fi
 
 # RDS Subnet Groups
 echo "📋 Step 3: RDS subnet groups"
-RDS_SUBNETS=$(aws rds describe-db-subnet-groups \
-  --query "DBSubnetGroups[?contains(DBSubnetGroupName, '${STACK_NAME}-${STAGE}')].DBSubnetGroupName" --output text 2>/dev/null || echo "")
+RDS_SUBNETS=$(normalize_aws_list "$(aws rds describe-db-subnet-groups \
+  --query "DBSubnetGroups[?contains(DBSubnetGroupName, '${STACK_NAME}-${STAGE}')].DBSubnetGroupName" --output text 2>/dev/null || true)")
 if [ -n "$RDS_SUBNETS" ]; then
   for group in $RDS_SUBNETS; do
     echo "Deleting RDS subnet group: $group"
@@ -78,8 +95,8 @@ fi
 
 # Lambda
 echo "📋 Step 4: Lambda functions"
-LAMBDA_FUNCS=$(aws lambda list-functions \
-  --query "Functions[?contains(FunctionName, '${STACK_NAME}-${STAGE}')].FunctionName" --output text 2>/dev/null || echo "")
+LAMBDA_FUNCS=$(normalize_aws_list "$(aws lambda list-functions \
+  --query "Functions[?contains(FunctionName, '${STACK_NAME}-${STAGE}')].FunctionName" --output text 2>/dev/null || true)")
 if [ -n "$LAMBDA_FUNCS" ]; then
   for func in $LAMBDA_FUNCS; do
     echo "Deleting Lambda function: $func"
@@ -91,9 +108,9 @@ fi
 
 # NAT Gateways
 echo "📋 Step 5: NAT Gateways"
-NAT_IDS=$(aws ec2 describe-nat-gateways \
+NAT_IDS=$(normalize_aws_list "$(aws ec2 describe-nat-gateways \
   --query "NatGateways[?State!='deleted' && contains(Tags[?Key=='sst:app'].Value, '${STACK_NAME}') && contains(Tags[?Key=='sst:stage'].Value, '${STAGE}')].NatGatewayId" \
-  --output text 2>/dev/null || echo "")
+  --output text 2>/dev/null || true)")
 if [ -n "$NAT_IDS" ]; then
   for nat in $NAT_IDS; do
     echo "Deleting NAT Gateway: $nat"
@@ -109,23 +126,24 @@ else
   echo "No NAT Gateways found to delete."
 fi
 
-# Elastic IPs
+# Elastic IPs (only those tagged for this SST app/stage)
 echo "📋 Step 6: Elastic IPs"
-EIP_IDS=$(aws ec2 describe-addresses \
-  --query "Addresses[?Domain=='vpc'].AllocationId" --output text 2>/dev/null || echo "")
+EIP_IDS=$(normalize_aws_list "$(aws ec2 describe-addresses \
+  --filters "Name=tag:sst:app,Values=${STACK_NAME}" "Name=tag:sst:stage,Values=${STAGE}" \
+  --query "Addresses[].AllocationId" --output text 2>/dev/null || true)")
 if [ -n "$EIP_IDS" ]; then
   for eip in $EIP_IDS; do
     echo "Releasing Elastic IP: $eip"
     aws ec2 release-address --allocation-id "$eip" || true
   done
 else
-  echo "No Elastic IPs found to release."
+  echo "No Elastic IPs found to release for this stage."
 fi
 
 # CloudFront
 echo "📋 Step 7: CloudFront distributions"
-DIST_IDS=$(aws cloudfront list-distributions \
-  --query "DistributionList.Items[?contains(Comment, '${STACK_NAME}-${STAGE}')].Id" --output text 2>/dev/null || echo "")
+DIST_IDS=$(normalize_aws_list "$(aws cloudfront list-distributions \
+  --query "DistributionList.Items[?contains(Comment, '${STACK_NAME}-${STAGE}')].Id" --output text 2>/dev/null || true)")
 if [ -n "$DIST_IDS" ]; then
   for dist_id in $DIST_IDS; do
     echo "Processing CloudFront distribution: $dist_id"
@@ -157,8 +175,8 @@ fi
 
 # S3 Buckets
 echo "📋 Step 8: S3 buckets"
-BUCKETS=$(aws s3api list-buckets \
-  --query "Buckets[?contains(Name, '${STACK_NAME}-${STAGE}')].Name" --output text 2>/dev/null || echo "")
+BUCKETS=$(normalize_aws_list "$(aws s3api list-buckets \
+  --query "Buckets[?contains(Name, '${STACK_NAME}-${STAGE}')].Name" --output text 2>/dev/null || true)")
 if [ -n "$BUCKETS" ]; then
   for bucket in $BUCKETS; do
     echo "Emptying and deleting bucket: $bucket"
@@ -171,19 +189,19 @@ fi
 
 # VPCs
 echo "📋 Step 9: VPCs"
-VPCS=$(aws ec2 describe-vpcs \
-  --filters "Name=tag:Name,Values=*${STACK_NAME}*" --query "Vpcs[].VpcId" --output text 2>/dev/null || echo "")
+VPCS=$(normalize_aws_list "$(aws ec2 describe-vpcs \
+  --filters "Name=tag:sst:app,Values=${STACK_NAME}" "Name=tag:sst:stage,Values=${STAGE}" --query "Vpcs[].VpcId" --output text 2>/dev/null || true)")
 if [ -n "$VPCS" ]; then
   for vpc in $VPCS; do
     echo "Cleaning VPC: $vpc"
 
          # Subnets
-     SUBNETS=$(aws ec2 describe-subnets --filters Name=vpc-id,Values="$vpc" --query "Subnets[].SubnetId" --output text 2>/dev/null || echo "")
+     SUBNETS=$(normalize_aws_list "$(aws ec2 describe-subnets --filters Name=vpc-id,Values="$vpc" --query "Subnets[].SubnetId" --output text 2>/dev/null || true)")
      for subnet in $SUBNETS; do 
        echo "Deleting subnet: $subnet"
        
        # Check if subnet has dependencies
-       DEPENDENCIES=$(aws ec2 describe-subnets --subnet-ids "$subnet" --query "Subnets[0].State" --output text 2>/dev/null || echo "")
+       DEPENDENCIES=$(normalize_aws_list "$(aws ec2 describe-subnets --subnet-ids "$subnet" --query "Subnets[0].State" --output text 2>/dev/null || true)")
        if [ "$DEPENDENCIES" = "available" ]; then
          aws ec2 delete-subnet --subnet-id "$subnet" || true
        else
@@ -192,8 +210,8 @@ if [ -n "$VPCS" ]; then
      done
 
          # Internet Gateways
-     IGWS=$(aws ec2 describe-internet-gateways \
-       --filters Name=attachment.vpc-id,Values="$vpc" --query "InternetGateways[].InternetGatewayId" --output text 2>/dev/null || echo "")
+     IGWS=$(normalize_aws_list "$(aws ec2 describe-internet-gateways \
+       --filters Name=attachment.vpc-id,Values="$vpc" --query "InternetGateways[].InternetGatewayId" --output text 2>/dev/null || true)")
      for igw in $IGWS; do
        echo "Processing Internet Gateway: $igw"
        
@@ -210,12 +228,12 @@ if [ -n "$VPCS" ]; then
      done
 
          # Route Tables - Detach associations first
-     RTBS=$(aws ec2 describe-route-tables --filters Name=vpc-id,Values="$vpc" --query "RouteTables[].RouteTableId" --output text 2>/dev/null || echo "")
+     RTBS=$(normalize_aws_list "$(aws ec2 describe-route-tables --filters Name=vpc-id,Values="$vpc" --query "RouteTables[].RouteTableId" --output text 2>/dev/null || true)")
      for rtb in $RTBS; do
        echo "Processing route table: $rtb"
        
        # Get associations and filter out null values
-       ASSOCIATIONS=$(aws ec2 describe-route-tables --route-table-ids "$rtb" --query "RouteTables[0].Associations[?AssociationId!=null].AssociationId" --output text 2>/dev/null || echo "")
+       ASSOCIATIONS=$(normalize_aws_list "$(aws ec2 describe-route-tables --route-table-ids "$rtb" --query "RouteTables[0].Associations[?AssociationId!=null].AssociationId" --output text 2>/dev/null || true)")
        if [ -n "$ASSOCIATIONS" ]; then
          for assoc in $ASSOCIATIONS; do
            echo "Disassociating route table association: $assoc"
@@ -230,14 +248,14 @@ if [ -n "$VPCS" ]; then
      done
 
     # Security groups (not default)
-    SGROUPS=$(aws ec2 describe-security-groups --filters Name=vpc-id,Values="$vpc" --query "SecurityGroups[?GroupName!='default'].GroupId" --output text 2>/dev/null || echo "")
+    SGROUPS=$(normalize_aws_list "$(aws ec2 describe-security-groups --filters Name=vpc-id,Values="$vpc" --query "SecurityGroups[?GroupName!='default'].GroupId" --output text 2>/dev/null || true)")
     for sg in $SGROUPS; do 
       echo "Deleting security group: $sg"
       aws ec2 delete-security-group --group-id "$sg" || true
     done
 
     # VPC endpoints
-    ENDPOINTS=$(aws ec2 describe-vpc-endpoints --filters Name=vpc-id,Values="$vpc" --query "VpcEndpoints[].VpcEndpointId" --output text 2>/dev/null || echo "")
+    ENDPOINTS=$(normalize_aws_list "$(aws ec2 describe-vpc-endpoints --filters Name=vpc-id,Values="$vpc" --query "VpcEndpoints[].VpcEndpointId" --output text 2>/dev/null || true)")
     for ep in $ENDPOINTS; do 
       echo "Deleting VPC endpoint: $ep"
       aws ec2 delete-vpc-endpoints --vpc-endpoint-ids "$ep" || true
@@ -253,21 +271,21 @@ if [ -n "$VPCS" ]; then
 
 # Final VPC cleanup - try to delete any remaining resources
 echo "📋 Step 9.5: Final VPC cleanup"
-VPCS=$(aws ec2 describe-vpcs \
-  --filters "Name=tag:Name,Values=*${STACK_NAME}*" --query "Vpcs[].VpcId" --output text 2>/dev/null || echo "")
+VPCS=$(normalize_aws_list "$(aws ec2 describe-vpcs \
+  --filters "Name=tag:sst:app,Values=${STACK_NAME}" "Name=tag:sst:stage,Values=${STAGE}" --query "Vpcs[].VpcId" --output text 2>/dev/null || true)")
 if [ -n "$VPCS" ]; then
   for vpc in $VPCS; do
     echo "Final cleanup for VPC: $vpc"
     
     # Try to delete any remaining subnets
-    REMAINING_SUBNETS=$(aws ec2 describe-subnets --filters Name=vpc-id,Values="$vpc" --query "Subnets[].SubnetId" --output text 2>/dev/null || echo "")
+    REMAINING_SUBNETS=$(normalize_aws_list "$(aws ec2 describe-subnets --filters Name=vpc-id,Values="$vpc" --query "Subnets[].SubnetId" --output text 2>/dev/null || true)")
     for subnet in $REMAINING_SUBNETS; do
       echo "Final attempt to delete subnet: $subnet"
       aws ec2 delete-subnet --subnet-id "$subnet" || true
     done
     
     # Try to delete any remaining route tables
-    REMAINING_RTBS=$(aws ec2 describe-route-tables --filters Name=vpc-id,Values="$vpc" --query "RouteTables[].RouteTableId" --output text 2>/dev/null || echo "")
+    REMAINING_RTBS=$(normalize_aws_list "$(aws ec2 describe-route-tables --filters Name=vpc-id,Values="$vpc" --query "RouteTables[].RouteTableId" --output text 2>/dev/null || true)")
     for rtb in $REMAINING_RTBS; do
       echo "Final attempt to delete route table: $rtb"
       aws ec2 delete-route-table --route-table-id "$rtb" || true
@@ -281,7 +299,7 @@ fi
 
 # CloudWatch Logs
 echo "📋 Step 10: CloudWatch logs"
-LOGS=$(aws logs describe-log-groups --query "logGroups[?contains(logGroupName, '${STACK_NAME}-${STAGE}')].logGroupName" --output text 2>/dev/null || echo "")
+LOGS=$(normalize_aws_list "$(aws logs describe-log-groups --query "logGroups[?contains(logGroupName, '${STACK_NAME}-${STAGE}')].logGroupName" --output text 2>/dev/null || true)")
 if [ -n "$LOGS" ]; then
   for log in $LOGS; do 
     echo "Deleting log group: $log"
@@ -293,11 +311,11 @@ fi
 
 # IAM Roles
 echo "📋 Step 11: IAM roles"
-ROLES=$(aws iam list-roles --query "Roles[?contains(RoleName, '${STACK_NAME}-${STAGE}')].RoleName" --output text 2>/dev/null || echo "")
+ROLES=$(normalize_aws_list "$(aws iam list-roles --query "Roles[?contains(RoleName, '${STACK_NAME}-${STAGE}')].RoleName" --output text 2>/dev/null || true)")
 if [ -n "$ROLES" ]; then
   for role in $ROLES; do
     echo "Processing IAM role: $role"
-    POLICIES=$(aws iam list-attached-role-policies --role-name "$role" --query 'AttachedPolicies[].PolicyArn' --output text 2>/dev/null || echo "")
+    POLICIES=$(normalize_aws_list "$(aws iam list-attached-role-policies --role-name "$role" --query 'AttachedPolicies[].PolicyArn' --output text 2>/dev/null || true)")
     for pol in $POLICIES; do 
       echo "Detaching policy $pol from role $role"
       aws iam detach-role-policy --role-name "$role" --policy-arn "$pol" || true
@@ -311,7 +329,7 @@ fi
 
 # Secrets Manager
 echo "📋 Step 12: Deleting Secrets Manager secrets"
-SECRETS=$(aws secretsmanager list-secrets --query "SecretList[?contains(Name, '${STACK_NAME}-${STAGE}')].ARN" --output text 2>/dev/null || echo "")
+SECRETS=$(normalize_aws_list "$(aws secretsmanager list-secrets --query "SecretList[?contains(Name, '${STACK_NAME}-${STAGE}')].ARN" --output text 2>/dev/null || true)")
 if [ -n "$SECRETS" ]; then
   for secret in $SECRETS; do
     echo "Deleting secret: $secret"
@@ -336,13 +354,13 @@ echo "📋 Step 14: Final SST remove retry"
 echo "Checking if SST resources still exist before attempting final remove..."
 
 # Check if there are any remaining SST-managed resources
-REMAINING_RESOURCES=$(aws resourcegroupstaggingapi get-resources \
+REMAINING_RESOURCES=$(normalize_aws_list "$(aws resourcegroupstaggingapi get-resources \
   --tag-filters Key=sst:app,Values="$STACK_NAME" Key=sst:stage,Values="$STAGE" \
-  --query "ResourceTagMappingList[].ResourceARN" --output text 2>/dev/null || echo "")
+  --query "ResourceTagMappingList[].ResourceARN" --output text 2>/dev/null || true)")
 
 if [ -n "$REMAINING_RESOURCES" ]; then
   echo "Found remaining SST resources, attempting final remove..."
-  sst remove --stage "$STAGE" || true
+  pnpm exec sst remove --stage "$STAGE" || true
 else
   echo "No remaining SST resources found, skipping final remove."
 fi
@@ -350,12 +368,12 @@ fi
 # Refresh SST state to sync with AWS reality
 echo "📋 Step 15: Refreshing SST state"
 echo "Syncing Pulumi state with actual AWS resources..."
-sst refresh --stage "$STAGE" || true
+pnpm exec sst refresh --stage "$STAGE" || true
 
 # Final SST remove attempt after refresh
 echo "📋 Step 16: Final SST remove after refresh"
 echo "Attempting final SST remove with clean state..."
-if sst remove --stage "$STAGE"; then
+if pnpm exec sst remove --stage "$STAGE"; then
   echo "✅ Final SST remove completed successfully."
 else
   echo "⚠️ Final SST remove failed, but resources should be cleaned up."

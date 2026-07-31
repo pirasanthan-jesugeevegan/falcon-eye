@@ -1,89 +1,71 @@
-# 🚀 PR-Based Deployment Strategy
+# Deployment strategy
 
-## 📋 Overview
+Deployment is optional and manual so repositories created from this template
+do not create AWS resources unexpectedly.
 
-This project uses a **PR-based deployment strategy** that creates temporary environments for each pull request, ensuring safe and cost-effective deployments.
+## GitHub workflows
 
-## 🔄 Workflow Files
+### Continuous Integration
 
-### ✅ **Active Workflows**
+`.github/workflows/ci.yml` runs installation, linting, backend tests, frontend
+builds, and a critical-level dependency audit on pushes and pull requests.
 
-| File                      | Purpose               | Trigger             | Environment   |
-| ------------------------- | --------------------- | ------------------- | ------------- |
-| `ci.yml`                  | Code quality checks   | All pushes/PRs      | None          |
-| `pr-deploy.yml`           | PR environments       | PR events           | `pr-{number}` |
-| `merge-to-production.yml` | Production deployment | PR merged to master | `production`  |
+### Preview environments
 
-### ❌ **Removed Workflows**
+Run **Manage Preview Environment** from GitHub Actions.
 
-| File                | Reason for Removal            |
-| ------------------- | ----------------------------- |
-| `cd-staging.yml`    | Replaced by PR environments   |
-| `cd-production.yml` | Replaced by PR merge workflow |
+- Choose a unique stage such as `preview-123`.
+- Choose `deploy` to create or update the stage.
+- Choose `remove` to destroy that same stage.
 
-## 🎯 **Deployment Flow**
+### Production
 
-### **1. Pull Request Created**
+Run **Deploy to Production** from GitHub Actions. Configure protection and
+required reviewers on the `production` GitHub environment before using it.
 
+## Required GitHub environment secrets
+
+Configure these in both `preview` and `production` as appropriate:
+
+| Secret                  | Purpose                                                  |
+| ----------------------- | -------------------------------------------------------- |
+| `AWS_ACCESS_KEY_ID`     | AWS deployment credential                                |
+| `AWS_SECRET_ACCESS_KEY` | AWS deployment credential                                |
+| `ENCRYPTION_KEY`        | 32-byte base64 key for encrypted integration credentials |
+| `ALLOWED_ORIGINS`       | Frontend origin allowed by the API                       |
+
+Prefer replacing static AWS keys with GitHub OIDC for long-lived production
+use.
+
+Both workflows set `SST_APP_NAME=falcon-eye` so deploy and `remove-all.sh`
+target the same resource prefix. Change that value in the workflows if you
+customize the SST app name. Existing stacks created as `pj-falcon-eye-stack`
+must use `SST_APP_NAME=pj-falcon-eye-stack` until rebuilt.
+
+## Local deployment
+
+```bash
+cd infra
+pnpm exec sst secret set EncryptionKey '<generated-key>' --stage dev
+pnpm exec sst secret set AllowedOrigins 'https://frontend.example.com' --stage dev
+pnpm run deploy:sst --stage dev
 ```
-PR #123 opened → Deploy to pr-123 → Comment with preview URL
+
+When using SST's generated frontend URL, update `AllowedOrigins` with the
+`frontendUrl` output and deploy the stage a second time.
+
+To remove the stage:
+
+```bash
+STAGE=dev ./remove-all.sh
 ```
 
-### **2. New Commits on PR**
+`sst remove` alone often fails partway through VPC, RDS, and NAT dependency
+chains. `remove-all.sh` tries SST first, then deletes only resources tagged for
+that app and stage. It does not sweep the whole AWS account. Set `SST_APP_NAME`
+if you customized the stack name.
 
-```
-New commit → Update pr-123 → Update comment with new URL
-```
+## Cost warning
 
-### **3. PR Merged**
-
-```
-PR merged → Deploy to production → Destroy pr-123 → Comment with production URL
-```
-
-### **4. PR Closed (Not Merged)**
-
-```
-PR closed → Destroy pr-123 → Comment cleanup notification
-```
-
-## 💰 **Cost Optimization**
-
-### **Per PR Environment**
-
-- **1 S3 bucket** (reused for all commits)
-- **1 CloudFront distribution** (reused for all commits)
-- **1 Lambda function** (reused for all commits)
-- **Estimated cost**: ~$0.50-1.00/month per PR
-
-### **Automatic Cleanup**
-
-- ✅ PR environments destroyed on merge/close
-- ✅ No orphaned resources
-- ✅ Cost-effective temporary environments
-
-## 🔧 **Environment Stages**
-
-| Stage         | Purpose    | Lifecycle                     |
-| ------------- | ---------- | ----------------------------- |
-| `pr-{number}` | PR preview | Created → Updated → Destroyed |
-| `production`  | Live site  | Permanent                     |
-
-## 🎉 **Benefits**
-
-1. **Safety**: Production only deploys after PR review
-2. **Cost**: One environment per PR, not per commit
-3. **Speed**: Reuses infrastructure for updates
-4. **Transparency**: Clear preview URLs for testing
-5. **Cleanup**: Automatic resource management
-
-## 🚀 **Getting Started**
-
-1. **Create a PR** → Automatic preview environment
-2. **Test changes** → Use preview URL
-3. **Merge PR** → Automatic production deployment
-4. **Cleanup** → Automatic resource cleanup
-
----
-
-_This strategy provides the perfect balance of safety, cost-effectiveness, and developer experience!_ 🎯
+This stack creates resources including a VPC and PostgreSQL database. Review
+the generated plan and AWS pricing before deploying previews or production.

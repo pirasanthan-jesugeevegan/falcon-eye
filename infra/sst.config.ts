@@ -3,15 +3,13 @@
 /// <reference path=".sst/platform/config.d.ts" />
 
 export default $config({
-  // Your app's config
   app(_input) {
     return {
-      name: 'pj-falcon-eye-stack',
+      name: process.env.SST_APP_NAME || 'falcon-eye',
       region: 'eu-west-2',
       home: 'aws',
     };
   },
-  // Your app's resources
   async run() {
     const { createDatabaseStack } = await import('./stacks/database');
     const { createBackendStack } = await import('./stacks/backend');

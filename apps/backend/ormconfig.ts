@@ -10,7 +10,7 @@ export const AppDataSource = new DataSource({
   url,
   entities: [join(__dirname, 'src', '**', '*.entity.{ts,js}')],
   migrations: [join(__dirname, 'src', 'database', 'migrations', '*.{ts,js}')],
-  synchronize: process.env.NODE_ENV !== 'production',
+  synchronize: process.env.DB_SYNCHRONIZE === 'true',
   logging: process.env.NODE_ENV !== 'production',
-  ssl: { rejectUnauthorized: false },
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });

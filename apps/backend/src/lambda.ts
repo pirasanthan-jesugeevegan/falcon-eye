@@ -22,8 +22,11 @@ async function bootstrap(): Promise<Handler> {
 
   // Enable CORS
   app.enableCors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
-    credentials: true,
+    origin:
+      process.env.ALLOWED_ORIGINS?.split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean) || '*',
+    credentials: false,
   });
 
   // Global validation pipe with proper configuration for Lambda
@@ -64,9 +67,6 @@ async function bootstrap(): Promise<Handler> {
 
 export const handler: Handler = async (event, context) => {
   try {
-    // Debug logging
-    console.log('Lambda event:', JSON.stringify(event, null, 2));
-
     server = server ?? (await bootstrap());
     return server(event, context);
   } catch (error) {

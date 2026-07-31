@@ -50,10 +50,13 @@ import { Infrastructure } from './modules/infrastructure/entities/infrastructure
           GithubConfig,
           Infrastructure,
         ],
-        synchronize: true,
+        synchronize: configService.get<string>('DB_SYNCHRONIZE') === 'true',
         migrations: [join(__dirname, 'database', 'migrations', '*.{ts,js}')],
         migrationsRun: true,
-        ssl: true,
+        ssl:
+          configService.get<string>('DB_SSL') === 'true'
+            ? { rejectUnauthorized: false }
+            : false,
       }),
     }),
     ProductsModule,

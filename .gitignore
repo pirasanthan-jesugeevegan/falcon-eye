@@ -1,6 +1,7 @@
 node_modules
 .DS_Store
 .env
+*.env.local
 dist
 .build 
 
@@ -8,8 +9,10 @@ apps/backend/coverage
 apps/backend/dist
 apps/backend/.env
 apps/backend/node_modules
+apps/frontend/dist
+apps/frontend/node_modules
 
-apps/packages/common/dist
+packages/common/dist
 
 # sst
 .sst
