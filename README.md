@@ -52,6 +52,12 @@ commit this value.
 Create the database named by `DB_NAME`, then run:
 
 ```bash
+docker run --name falcon-eye-postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=falcon_eye \
+  -p 5432:5432 \
+  -d postgres:16-alpine
 pnpm backend:migration:run
 pnpm backend:seed # optional example data
 ```
