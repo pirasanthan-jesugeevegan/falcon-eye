@@ -54,6 +54,11 @@ jobs:
           SEED_RESET: 'true'
         run: pnpm run backend:seed
 
+      # The runner ships a newer Pulumi than the one SST bundles; the mismatch fails with
+      # "flag provided but not defined: -root". Remove it so SST uses its own.
+      - name: Remove preinstalled Pulumi
+        run: sudo rm -f /usr/local/bin/pulumi*
+
       - name: Deploy (SST)
         working-directory: infra
         env:
