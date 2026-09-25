@@ -18,7 +18,20 @@ export default $config({
     const { createBackendStack } = await import('./stacks/backend');
     const { createFrontendStack } = await import('./stacks/frontend');
 
-    const router = new sst.aws.Router('Web');
+    const router = new sst.aws.Router('Web', {
+      edge: {
+        viewerRequest: {
+          // SPA fallback: client-side routes (no file extension, not /api) serve index.html.
+          // A router-served StaticSite does not get the errorPage fallback.
+          injection: `
+            var uri = event.request.uri;
+            if (uri.indexOf('/api') !== 0 && !/\\.[A-Za-z0-9]+$/.test(uri)) {
+              event.request.uri = '/index.html';
+            }
+          `,
+        },
+      },
+    });
     createBackendStack(router);
     const { url } = createFrontendStack(router);
 

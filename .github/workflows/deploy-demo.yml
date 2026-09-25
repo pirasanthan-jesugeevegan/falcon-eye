@@ -66,3 +66,21 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: eu-west-2
         run: pnpm run deploy:sst --stage demo
+
+      # SST 3.17 creates the function URL with only lambda:InvokeFunctionUrl. AWS now also
+      # requires lambda:InvokeFunction (via function URL), else every request is a 403.
+      # Fixed upstream in SST 4.2.6+. Idempotent, so reruns are safe.
+      - name: Allow public Function URL invoke
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: eu-west-2
+        run: |
+          FN=$(aws lambda list-functions --query "Functions[?starts_with(FunctionName,'falcon-eye-demo-NestJSAPIFunction')].FunctionName | [0]" --output text)
+          [ -n "$FN" ] && [ "$FN" != "None" ] || { echo "API function not found"; exit 1; }
+          if aws lambda get-policy --function-name "$FN" --query Policy --output text | grep -q AllowInvokeFunctionViaUrl; then
+            echo "Permission already present on $FN"
+          else
+            aws lambda add-permission --function-name "$FN" --statement-id AllowInvokeFunctionViaUrl \
+              --action lambda:InvokeFunction --principal '*' --invoked-via-function-url
+          fi
