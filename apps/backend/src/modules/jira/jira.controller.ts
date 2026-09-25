@@ -10,7 +10,6 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { DisabledInDemo } from '../../security/decorators';
 import { JiraService } from './jira.service';
 import { CreateJiraConfigDto } from './dto/create-jira-config.dto';
 import { UpdateJiraConfigDto } from './dto/update-jira-config.dto';
@@ -19,7 +18,6 @@ import { UpdateJiraQueryDto } from './dto/update-jira-query.dto';
 import { JiraConfig } from './entities/jira-config.entity';
 import { JiraQuery } from './entities/jira-query.entity';
 
-@DisabledInDemo()
 @Controller('jira')
 export class JiraController {
   constructor(private readonly jiraService: JiraService) {}

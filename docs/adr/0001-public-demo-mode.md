@@ -28,7 +28,7 @@ Two modes, chosen by `DEMO_MODE`:
 | --------------------------------- | ------------------------------ | -------------------------------------------- |
 | Reads                             | open                           | open                                         |
 | Writes (POST, PATCH, PUT, DELETE) | refused (403)                  | allowed                                      |
-| Jira, SonarCloud, GitHub routes   | refused (403)                  | allowed                                      |
+| Jira, SonarCloud, GitHub reads    | served from sample data        | allowed (call the real services)             |
 | Who protects it                   | the app: it can change nothing | the network: IP allow-list, VPN or SSO proxy |
 
 - The demo has no keys and no login: it is read-only, so there is nothing to steal or change.
@@ -41,6 +41,24 @@ Two modes, chosen by `DEMO_MODE`:
 - `configureApp()` is the only HTTP setup (helmet, CORS, strict validation, serialization).
   `main.ts`, the Lambda handler and the tests all call it.
 - Rate limiting uses `@nestjs/throttler`.
+
+### Amendment: integration reads in demo mode
+
+The first version refused every Jira, SonarCloud and GitHub route in demo mode, which left the
+dashboard's issue, quality-gate and workflow panels empty. Demo mode now serves their **reads**
+from sample data (`src/demo/demo-integrations.ts`, inserted into the demo database by the seed):
+
+- `executeQuery` (Jira, SonarCloud) and the GitHub run lookups return the sample data and make
+  **no outbound HTTP call**, so the stored URL and token are never used. The SSRF risk described
+  above stays closed: the only outbound call was the one that is now skipped.
+- Every write (POST, PATCH, PUT, DELETE) on those routes is still refused with 403 by the guard,
+  so a caller still cannot store a URL or token.
+- The tokens in the demo database are encrypted placeholders, and `@Exclude()` keeps them out of
+  every response.
+- `@DisabledInDemo()` remains available for any route that must be off entirely in a demo.
+
+`security.e2e-spec.ts` pins this: the sample-data routes fail their test if they make an outbound
+call, and a private deployment is tested to still call the real Jira.
 
 ## Consequences
 

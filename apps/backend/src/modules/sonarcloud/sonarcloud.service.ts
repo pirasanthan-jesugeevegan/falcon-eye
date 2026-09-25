@@ -1,9 +1,13 @@
 import {
+  Inject,
   Injectable,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { APP_CONFIG } from '../../security/security.constants';
+import type { AppConfig } from '../../config/app-config';
+import { demoSonarResult } from '../../demo/demo-integrations';
 import { Repository } from 'typeorm';
 import axios from 'axios';
 import { encrypt, decrypt } from '../../crypto.util';
@@ -21,6 +25,7 @@ export class SonarCloudService {
     private sonarCloudConfigRepository: Repository<SonarCloudConfig>,
     @InjectRepository(SonarCloudQuery)
     private sonarCloudQueryRepository: Repository<SonarCloudQuery>,
+    @Inject(APP_CONFIG) private readonly config: AppConfig,
   ) {}
 
   // SonarCloud Configuration Methods
@@ -223,6 +228,10 @@ export class SonarCloudService {
   // Execute Jira Query to fetch issues
   async executeQuery(queryId: string): Promise<any> {
     const sonarCloudQuery = await this.findSonarCloudQueryById(queryId);
+    // Public demo: answer from sample data; never call the stored SonarCloud URL.
+    if (this.config.demoMode) {
+      return demoSonarResult(sonarCloudQuery.project, sonarCloudQuery.metric);
+    }
     const sonarCloudConfig = await this.findSonarCloudConfigById(
       sonarCloudQuery.sonarCloudConfigId,
     );

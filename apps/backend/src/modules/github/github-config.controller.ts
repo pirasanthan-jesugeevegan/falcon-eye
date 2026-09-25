@@ -9,12 +9,10 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { DisabledInDemo } from '../../security/decorators';
 import { GithubConfigService } from './github-config.service';
 import { CreateGithubConfigDto } from './dto/create-github-config.dto';
 import { TriggerWorkflowDto } from './dto/trigger-workflow.dto';
 
-@DisabledInDemo()
 @Controller('github')
 export class GithubConfigController {
   constructor(private readonly githubConfigService: GithubConfigService) {}

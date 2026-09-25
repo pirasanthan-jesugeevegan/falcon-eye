@@ -1,9 +1,13 @@
 import {
+  Inject,
   Injectable,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { APP_CONFIG } from '../../security/security.constants';
+import type { AppConfig } from '../../config/app-config';
+import { demoJiraResult } from '../../demo/demo-integrations';
 import { Repository } from 'typeorm';
 import axios from 'axios';
 import { encrypt, decrypt } from '../../crypto.util';
@@ -21,6 +25,7 @@ export class JiraService {
     private jiraConfigRepository: Repository<JiraConfig>,
     @InjectRepository(JiraQuery)
     private jiraQueryRepository: Repository<JiraQuery>,
+    @Inject(APP_CONFIG) private readonly config: AppConfig,
   ) {}
 
   // Jira Configuration Methods
@@ -188,6 +193,8 @@ export class JiraService {
   // Execute Jira Query to fetch issues
   async executeQuery(queryId: string): Promise<any> {
     const jiraQuery = await this.findJiraQueryById(queryId);
+    // Public demo: answer from sample data; never call the stored Jira URL.
+    if (this.config.demoMode) return demoJiraResult(jiraQuery.name);
     const jiraConfig = await this.findJiraConfigById(jiraQuery.jiraConfigId);
 
     // Decrypt the API token for use

@@ -1,10 +1,17 @@
 import {
+  Inject,
   Injectable,
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { APP_CONFIG } from '../../security/security.constants';
+import type { AppConfig } from '../../config/app-config';
+import {
+  demoWorkflowRun,
+  demoWorkflowRuns,
+} from '../../demo/demo-integrations';
 import { GithubConfig } from './entities/github-config.entity';
 import { GithubService } from './github.service';
 import { encrypt } from '../../crypto.util';
@@ -17,6 +24,7 @@ export class GithubConfigService {
     @InjectRepository(GithubConfig)
     private readonly configRepo: Repository<GithubConfig>,
     private readonly githubService: GithubService,
+    @Inject(APP_CONFIG) private readonly appConfig: AppConfig,
   ) {}
 
   async createConfig(dto: CreateGithubConfigDto) {
@@ -237,14 +245,16 @@ export class GithubConfigService {
         throw new NotFoundException('GitHub config not found');
       }
 
-      // Get workflow runs using the GitHub service
-      const runs = await this.githubService.getWorkflowRuns(
-        config.owner,
-        config.repo,
-        config.workflow,
-        config.encryptedPat,
-        10, // per_page
-      );
+      // Public demo: sample runs; never call GitHub with the stored token.
+      const runs = this.appConfig.demoMode
+        ? demoWorkflowRuns(config.owner, config.repo, config.workflow)
+        : await this.githubService.getWorkflowRuns(
+            config.owner,
+            config.repo,
+            config.workflow,
+            config.encryptedPat,
+            10, // per_page
+          );
 
       return {
         success: true,
@@ -278,13 +288,16 @@ export class GithubConfigService {
         throw new NotFoundException('GitHub config not found');
       }
 
-      // Get specific workflow run using the GitHub service
-      const run = await this.githubService.getWorkflowRun(
-        config.owner,
-        config.repo,
-        runId,
-        config.encryptedPat,
-      );
+      // Public demo: a sample run; never call GitHub with the stored token.
+      const run = this.appConfig.demoMode
+        ? demoWorkflowRun(config.owner, config.repo, config.workflow, runId)
+        : await this.githubService.getWorkflowRun(
+            config.owner,
+            config.repo,
+            runId,
+            config.encryptedPat,
+          );
+      if (!run) throw new NotFoundException('Workflow run not found');
 
       return {
         success: true,

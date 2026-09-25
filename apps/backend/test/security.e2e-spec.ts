@@ -1,7 +1,13 @@
 import { INestApplication } from '@nestjs/common';
+import axios from 'axios';
+import { randomBytes } from 'crypto';
 import * as request from 'supertest';
+import { encrypt } from '../src/crypto.util';
+import { GithubConfig } from '../src/modules/github/entities/github-config.entity';
 import { JiraConfig } from '../src/modules/jira/entities/jira-config.entity';
+import { JiraQuery } from '../src/modules/jira/entities/jira-query.entity';
 import { Product } from '../src/modules/products/entities/product.entity';
+import { SonarCloudQuery } from '../src/modules/sonarcloud/entities/sonarcloud-query.entity';
 import { ALLOWED_ORIGIN, createTestApp } from './helpers/create-test-app';
 
 const product = {
@@ -17,11 +23,24 @@ type TestApp = Awaited<ReturnType<typeof createTestApp>>;
 describe('Public demo mode (e2e)', () => {
   let app: INestApplication;
   let repo: TestApp['repo'];
+  // Any HTTP call the server makes to Jira, SonarCloud or GitHub lands here.
+  let outbound: jest.Mock;
 
   beforeEach(async () => {
+    outbound = jest.fn(async () => {
+      throw new Error('demo mode must not make outbound calls');
+    });
+    jest.spyOn(axios, 'get').mockImplementation(outbound);
+    // GithubService builds its own client with axios.create() at start-up.
+    jest
+      .spyOn(axios, 'create')
+      .mockReturnValue({ get: outbound, post: outbound } as never);
     ({ app, repo } = await createTestApp({ demoMode: true }));
   });
-  afterEach(() => app.close());
+  afterEach(async () => {
+    await app.close();
+    jest.restoreAllMocks();
+  });
 
   it('reports that it is a demo', async () => {
     await request(app.getHttpServer())
@@ -55,13 +74,78 @@ describe('Public demo mode (e2e)', () => {
     expect(repo(Product).delete).not.toHaveBeenCalled();
   });
 
-  it('switches every integration route off', async () => {
+  it('lists the integration configs and queries', async () => {
     const server = () => request(app.getHttpServer());
 
-    await server().get('/jira/config').expect(403);
-    await server().get('/sonarcloud/config').expect(403);
-    await server().get('/github/config').expect(403);
+    await server().get('/jira/config').expect(200);
+    await server().get('/jira/query').expect(200);
+    await server().get('/sonarcloud/config').expect(200);
+    await server().get('/sonarcloud/query').expect(200);
+    await server().get('/github/config').expect(200);
+  });
+
+  it('refuses every integration write', async () => {
+    const server = () => request(app.getHttpServer());
+
+    await server().post('/jira/query').send({}).expect(403);
+    await server().delete(`/sonarcloud/config/${ID}`).expect(403);
     await server().post(`/github/config/${ID}/trigger`).send({}).expect(403);
+  });
+
+  it('answers Jira queries from sample data, never from Jira', async () => {
+    repo(JiraQuery).findOne.mockResolvedValue({
+      id: ID,
+      name: 'Open bugs',
+      jiraConfigId: ID,
+    });
+
+    const response = await request(app.getHttpServer())
+      .get(`/jira/query/${ID}/execute`)
+      .expect(200);
+
+    expect(response.body.issues.length).toBeGreaterThan(0);
+    expect(response.body.issues[0].fields.priority.name).toBeTruthy();
+    expect(outbound).not.toHaveBeenCalled();
+  });
+
+  it('answers SonarCloud queries from sample data, never from SonarCloud', async () => {
+    repo(SonarCloudQuery).findOne.mockResolvedValue({
+      id: ID,
+      name: 'Payments API',
+      project: 'northwind_payments-api',
+      metric: ['project_status', 'pull_request'],
+      sonarCloudConfigId: ID,
+    });
+
+    const response = await request(app.getHttpServer())
+      .get(`/sonarcloud/query/${ID}/execute`)
+      .expect(200);
+
+    expect(response.body.project_status.projectStatus.status).toBe('ERROR');
+    expect(response.body.pull_request.pullRequests.length).toBeGreaterThan(0);
+    expect(outbound).not.toHaveBeenCalled();
+  });
+
+  it('answers GitHub workflow runs from sample data, never from GitHub', async () => {
+    repo(GithubConfig).findOne.mockResolvedValue({
+      id: ID,
+      owner: 'northwind',
+      repo: 'storefront-web',
+      workflow: 'e2e-nightly.yml',
+      encryptedPat: 'not-decryptable',
+      isActive: true,
+    });
+    const server = () => request(app.getHttpServer());
+
+    const list = await server().get(`/github/config/${ID}/runs`).expect(200);
+    expect(list.body.runs).toHaveLength(10);
+
+    const runId = list.body.runs[0].id;
+    const one = await server()
+      .get(`/github/config/${ID}/runs/${runId}`)
+      .expect(200);
+    expect(one.body.run.id).toBe(runId);
+    expect(outbound).not.toHaveBeenCalled();
   });
 
   it('cannot be used to make the server call a caller-supplied URL', async () => {
@@ -93,6 +177,32 @@ describe('Private deployment (e2e)', () => {
       .send(product)
       .expect(201);
     expect(repo(Product).save).toHaveBeenCalledTimes(1);
+  });
+
+  it('still asks the real Jira for issues, not the sample data', async () => {
+    process.env.ENCRYPTION_KEY = randomBytes(32).toString('base64');
+    const get = jest
+      .spyOn(axios, 'get')
+      .mockResolvedValue({ status: 200, data: { issues: [] } });
+    repo(JiraQuery).findOne.mockResolvedValue({
+      id: ID,
+      name: 'Open bugs',
+      jqlQuery: 'project = NW',
+      jiraConfigId: ID,
+    });
+    repo(JiraConfig).findOne.mockResolvedValue({
+      id: ID,
+      baseUrl: 'https://northwind.atlassian.net',
+      email: 'qa-bot@northwind.example',
+      encryptedApiToken: encrypt('real-token'),
+    });
+
+    await request(app.getHttpServer())
+      .get(`/jira/query/${ID}/execute`)
+      .expect(200);
+
+    expect(get).toHaveBeenCalledTimes(1);
+    get.mockRestore();
   });
 
   it('reports that it is not a demo', async () => {

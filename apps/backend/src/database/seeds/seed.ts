@@ -4,6 +4,12 @@ import { AppModule } from '../../app.module';
 import { ProductsService } from '../../modules/products/products.service';
 import { E2EResultsService } from '../../modules/e2e-results/e2e-results.service';
 import { UnitResultsService } from '../../modules/unit-results/unit-results.service';
+import { GithubConfig } from '../../modules/github/entities/github-config.entity';
+import { JiraConfig } from '../../modules/jira/entities/jira-config.entity';
+import { JiraQuery } from '../../modules/jira/entities/jira-query.entity';
+import { SonarCloudConfig } from '../../modules/sonarcloud/entities/sonarcloud-config.entity';
+import { SonarCloudQuery } from '../../modules/sonarcloud/entities/sonarcloud-query.entity';
+import { seedIntegrations } from './seed-integrations';
 
 /**
  * Seeds a fictional retailer ("Northwind") with 30 days of QA history, so the
@@ -14,7 +20,8 @@ import { UnitResultsService } from '../../modules/unit-results/unit-results.serv
  * Dates are relative to "now", so the charts always cover the last 30 days.
  *
  *   pnpm backend:seed                 seed an empty database
- *   SEED_RESET=true pnpm backend:seed wipe results and products, then reseed
+ *   SEED_RESET=true pnpm backend:seed wipe results, products and the Jira /
+ *                                     SonarCloud / GitHub configs, then reseed
  */
 
 const DAYS = 30;
@@ -307,9 +314,11 @@ async function bootstrap() {
 
   try {
     if (process.env.SEED_RESET === 'true') {
-      console.log('SEED_RESET=true: clearing results and products...');
+      console.log(
+        'SEED_RESET=true: clearing results, products and integrations...',
+      );
       await dataSource.query(
-        'TRUNCATE TABLE e2e_results, unit_results, products RESTART IDENTITY CASCADE',
+        'TRUNCATE TABLE e2e_results, unit_results, products, jira_queries, jira_config, sonarcloud_queries, sonarcloud_config, github_configs RESTART IDENTITY CASCADE',
       );
     } else if ((await productsService.findAll()).length > 0) {
       console.log(
@@ -329,6 +338,14 @@ async function bootstrap() {
       const unit = await seedUnit(unitResultsService, p);
       console.log(`${p.name}: ${e2e} E2E runs, ${unit} unit runs`);
     }
+    await seedIntegrations({
+      jiraConfig: dataSource.getRepository(JiraConfig),
+      jiraQuery: dataSource.getRepository(JiraQuery),
+      sonarConfig: dataSource.getRepository(SonarCloudConfig),
+      sonarQuery: dataSource.getRepository(SonarCloudQuery),
+      github: dataSource.getRepository(GithubConfig),
+    });
+    console.log('Seeded Jira, SonarCloud and GitHub sample integrations');
     console.log('Database seeding completed successfully!');
   } catch (error) {
     console.error('Error while seeding database:', error);
