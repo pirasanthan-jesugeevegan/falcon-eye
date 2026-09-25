@@ -1,0 +1,63 @@
+name: Deploy Demo
+
+# The `demo` branch is the public portfolio deployment. `master` stays the template.
+on:
+  push:
+    branches: [demo]
+  workflow_dispatch:
+  schedule:
+    # Weekly: reseed so the sample data's "last 30 days" stays current.
+    - cron: '17 5 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-demo
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10.13.1'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: demo
+    env:
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_SSL: 'true'
+      ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build backend
+        run: pnpm run common:build && pnpm run backend:build
+
+      # Boots the app config, which applies pending migrations, then reloads the sample data.
+      - name: Migrate and seed Neon
+        env:
+          NODE_ENV: development
+          SEED_RESET: 'true'
+        run: pnpm run backend:seed
+
+      - name: Deploy (SST)
+        working-directory: infra
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: eu-west-2
+        run: pnpm run deploy:sst --stage demo
