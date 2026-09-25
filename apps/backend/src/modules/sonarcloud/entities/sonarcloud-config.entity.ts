@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -18,6 +19,7 @@ export class SonarCloudConfig {
   baseUrl: string;
 
   @Column({ type: 'text' })
+  @Exclude()
   encryptedApiToken: string;
 
   @Column({ default: true })

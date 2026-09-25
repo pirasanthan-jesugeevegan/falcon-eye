@@ -10,6 +10,7 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { DisabledInDemo } from '../../security/decorators';
 import { SonarCloudService } from './sonarcloud.service';
 import { CreateSonarCloudConfigDto } from './dto/create-sonarcloud-config.dto';
 import { UpdateSonarCloudConfigDto } from './dto/update-sonarcloud-config.dto';
@@ -18,6 +19,7 @@ import { UpdateSonarCloudQueryDto } from './dto/update-sonarcloud-query.dto';
 import { SonarCloudConfig } from './entities/sonarcloud-config.entity';
 import { SonarCloudQuery } from './entities/sonarcloud-query.entity';
 
+@DisabledInDemo()
 @Controller('sonarcloud')
 export class SonarCloudController {
   constructor(private readonly sonarCloudService: SonarCloudService) {}

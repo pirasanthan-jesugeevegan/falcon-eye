@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { configureApp } from './bootstrap/configure-app';
 import { LogLevel } from '@nestjs/common';
 import type { Handler } from 'serverless-http';
 
@@ -20,30 +20,8 @@ async function bootstrap(): Promise<Handler> {
     logger: logLevels,
   });
 
-  // Enable CORS
-  app.enableCors({
-    origin:
-      process.env.ALLOWED_ORIGINS?.split(',')
-        .map((origin) => origin.trim())
-        .filter(Boolean) || '*',
-    credentials: false,
-  });
-
-  // Global validation pipe with proper configuration for Lambda
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: false, // Changed to false to prevent "property X should not exist" errors
-      skipMissingProperties: true, // Changed to true to allow missing properties
-      transformOptions: {
-        enableImplicitConversion: true, // Added this for better type conversion
-      },
-    }),
-  );
-
-  // Set global prefix for all routes
-  app.setGlobalPrefix('api');
+  // Same HTTP setup as main.ts (CORS, headers, strict validation, serialization).
+  configureApp(app, { globalPrefix: 'api' });
 
   await app.init();
 

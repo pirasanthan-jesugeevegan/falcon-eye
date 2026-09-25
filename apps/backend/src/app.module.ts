@@ -16,6 +16,8 @@ import { SonarCloudConfig } from './modules/sonarcloud/entities/sonarcloud-confi
 import { SonarCloudQuery } from './modules/sonarcloud/entities/sonarcloud-query.entity';
 import { GithubModule } from './modules/github/github.module';
 import { GithubConfig } from './modules/github/entities/github-config.entity';
+import { SecurityModule } from './security/security.module';
+import { HealthModule } from './health/health.module';
 import { InfrastructureModule } from './modules/infrastructure/infrastructure.module';
 import { Infrastructure } from './modules/infrastructure/entities/infrastructure.entity';
 
@@ -59,6 +61,8 @@ import { Infrastructure } from './modules/infrastructure/entities/infrastructure
             : false,
       }),
     }),
+    SecurityModule.register(),
+    HealthModule,
     ProductsModule,
     E2EResultsModule,
     UnitResultsModule,
