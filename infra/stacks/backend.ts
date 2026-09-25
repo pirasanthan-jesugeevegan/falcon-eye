@@ -34,28 +34,28 @@ export function createBackendStack(router: sst.aws.Router) {
     url: { router: { instance: router, path: '/api' } },
     nodejs: {
       format: 'cjs',
-      // Pinned to the versions the backend is built and tested with (pnpm-lock.yaml).
-      // Unpinned names resolve to npm's latest, and @nestjs/core 12 is ESM-only, which
-      // fails to load from this CommonJS bundle.
-      install: {
-        '@nestjs/common': '10.4.20',
-        '@nestjs/core': '10.4.20',
-        '@nestjs/platform-express': '10.4.20',
-        '@nestjs/typeorm': '9.0.1',
-        '@nestjs/config': '2.3.4',
-        '@nestjs/throttler': '6.7.1',
-        express: '4.21.2',
-        helmet: '8.3.0',
-        'reflect-metadata': '0.2.2',
-        rxjs: '7.8.2',
-        typeorm: '0.3.25',
-        pg: '8.16.3',
-        'class-validator': '0.14.2',
-        'class-transformer': '0.5.1',
-        'serverless-http': '3.2.0',
-        axios: '1.11.0',
-        uuid: '9.0.1',
-      },
+      // Versions are read from infra/package.json (SST 3.x), where they are pinned to match
+      // the backend's lockfile. Unlisted, npm installs the latest, and @nestjs/core 12 is
+      // ESM-only, which fails to load from this CommonJS bundle.
+      install: [
+        '@nestjs/common',
+        '@nestjs/core',
+        '@nestjs/platform-express',
+        '@nestjs/typeorm',
+        '@nestjs/config',
+        '@nestjs/throttler',
+        'express',
+        'helmet',
+        'reflect-metadata',
+        'rxjs',
+        'typeorm',
+        'pg',
+        'class-validator',
+        'class-transformer',
+        'serverless-http',
+        'axios',
+        'uuid',
+      ],
     },
   });
 
