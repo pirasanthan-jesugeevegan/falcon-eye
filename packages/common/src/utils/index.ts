@@ -12,3 +12,7 @@ export {
   calculateAverageTestCoverage,
   summariseLatestE2E,
 } from './calculations';
+
+// Query utilities
+export { runActiveQueries } from './queries';
+export type { FailedQuery } from './queries';
