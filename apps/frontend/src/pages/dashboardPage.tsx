@@ -55,6 +55,15 @@ export function DashboardPage() {
       }
     : undefined;
 
+  // Integration queries that failed; the rest of the dashboard still renders.
+  const failedQueries = [
+    ...(rawIssues?.failedQueries ?? []).map(f => ({ ...f, source: 'Jira' })),
+    ...(rawSonarCloudData?.failedQueries ?? []).map(f => ({
+      ...f,
+      source: 'SonarCloud',
+    })),
+  ];
+
   const {
     allUnitResults,
     allE2EResults,
@@ -117,6 +126,26 @@ export function DashboardPage() {
             all your products.
           </p>
         </div>
+
+        {failedQueries.length > 0 && (
+          <div
+            role="alert"
+            className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-md text-sm space-y-1"
+          >
+            <p className="font-medium">
+              {failedQueries.length} integration{' '}
+              {failedQueries.length === 1 ? 'query' : 'queries'} failed to load.
+              Figures from them are missing below.
+            </p>
+            <ul className="list-disc pl-5">
+              {failedQueries.map(f => (
+                <li key={`${f.source}-${f.name}`}>
+                  {f.source} &ldquo;{f.name}&rdquo;: {f.message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Enhanced Overview Cards with Real Data */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
