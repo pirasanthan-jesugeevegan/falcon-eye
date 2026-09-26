@@ -14,6 +14,10 @@ import { UpdateJiraConfigDto } from './dto/update-jira-config.dto';
 import { CreateJiraQueryDto } from './dto/create-jira-query.dto';
 import { UpdateJiraQueryDto } from './dto/update-jira-query.dto';
 
+// Jira caps a page at 100 issues; stop paging at 500 so a broad JQL can't fan out.
+const JIRA_PAGE_SIZE = 100;
+const JIRA_MAX_ISSUES = 500;
+
 @Injectable()
 export class JiraService {
   constructor(
@@ -275,29 +279,43 @@ export class JiraService {
     email: string,
     apiToken: string,
     jqlQuery: string,
-    maxResults = 50,
-    startAt = 0,
-  ): Promise<any> {
+  ): Promise<{ issues: any[]; total: number; truncated: boolean }> {
     try {
       const cleanBaseUrl = baseUrl.replace(/\/+$/, ''); // Remove trailing slashes
-      const response = await axios.get(
-        `${cleanBaseUrl}/rest/api/3/search/jql`,
-        {
-          params: {
-            jql: jqlQuery,
-            maxResults,
-            startAt,
-            fields:
-              'summary,status,assignee,created,updated,priority,issuetype',
-          },
-          auth: {
-            username: email,
-            password: apiToken,
-          },
-        },
-      );
+      const issues: any[] = [];
+      let nextPageToken: string | undefined;
+      let truncated = false;
 
-      return response.data;
+      do {
+        const response = await axios.get(
+          `${cleanBaseUrl}/rest/api/3/search/jql`,
+          {
+            params: {
+              jql: jqlQuery,
+              maxResults: JIRA_PAGE_SIZE,
+              nextPageToken,
+              fields:
+                'summary,status,assignee,created,updated,priority,issuetype',
+            },
+            auth: {
+              username: email,
+              password: apiToken,
+            },
+          },
+        );
+
+        issues.push(...(response.data.issues ?? []));
+        nextPageToken = response.data.isLast
+          ? undefined
+          : response.data.nextPageToken;
+
+        if (nextPageToken && issues.length >= JIRA_MAX_ISSUES) {
+          truncated = true;
+          break;
+        }
+      } while (nextPageToken);
+
+      return { issues, total: issues.length, truncated };
     } catch (error: any) {
       const status = error?.response?.status;
       const errorData = error?.response?.data;
