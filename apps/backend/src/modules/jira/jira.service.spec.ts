@@ -36,7 +36,10 @@ describe('JiraService.executeQuery', () => {
         encryptedApiToken: encrypt('token'),
       }),
     };
-    service = new JiraService(configRepo as any, queryRepo as any);
+    service = new JiraService(configRepo as any, queryRepo as any, {
+      demoMode: false,
+      allowedOrigins: [],
+    });
   });
 
   it('follows nextPageToken until the last page', async () => {

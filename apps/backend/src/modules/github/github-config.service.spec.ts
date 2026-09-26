@@ -8,7 +8,10 @@ describe('GithubConfigService', () => {
   beforeEach(() => {
     repo = { findOne: jest.fn(), create: jest.fn(), save: jest.fn() };
     github = { triggerWorkflow: jest.fn().mockResolvedValue(204) };
-    service = new GithubConfigService(repo as any, github as any);
+    service = new GithubConfigService(repo as any, github as any, {
+      demoMode: false,
+      allowedOrigins: [],
+    });
   });
 
   describe('triggerWorkflow', () => {

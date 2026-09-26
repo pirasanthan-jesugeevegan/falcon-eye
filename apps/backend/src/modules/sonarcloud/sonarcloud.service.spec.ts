@@ -44,7 +44,10 @@ describe('SonarCloudService', () => {
         encryptedApiToken: encrypt('token'),
       }),
     };
-    service = new SonarCloudService(configRepo as any, queryRepo as any);
+    service = new SonarCloudService(configRepo as any, queryRepo as any, {
+      demoMode: false,
+      allowedOrigins: [],
+    });
   });
 
   describe('updateSonarCloudQuery', () => {
