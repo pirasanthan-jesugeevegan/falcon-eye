@@ -36,7 +36,7 @@ export function ProductTestResultsStatus({
           <TooltipContent>
             <p className="max-w-xs">
               Overview of test status for each product. Shows E2E test results
-              and unit test coverage.
+              and unit test pass rate.
             </p>
           </TooltipContent>
         </Tooltip>
@@ -75,7 +75,7 @@ export function ProductTestResultsStatus({
                           <Info className="h-3 w-3 text-muted-foreground" />
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Unit test coverage percentage</p>
+                          <p>Unit test pass rate</p>
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -104,7 +104,7 @@ function ProductStatusRow({ product }: { product: any }) {
 
   // Get latest unit test result
   const latestUnitResult = unitResults.data?.[0]?.result?.[0];
-  const unitCoverage = latestUnitResult
+  const unitPassRate = latestUnitResult
     ? parseFloat(latestUnitResult.percentage)
     : 0;
 
@@ -141,11 +141,11 @@ function ProductStatusRow({ product }: { product: any }) {
         )}
       </TableCell>
       <TableCell>
-        {unitCoverage > 0 ? (
+        {unitPassRate > 0 ? (
           <div className="flex items-center gap-2">
-            <Progress value={unitCoverage} className="w-16" />
+            <Progress value={unitPassRate} className="w-16" />
             <span className="text-sm font-medium">
-              {unitCoverage.toFixed(1)}%
+              {unitPassRate.toFixed(1)}%
             </span>
           </div>
         ) : (

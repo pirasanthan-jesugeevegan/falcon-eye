@@ -12,7 +12,11 @@ import { SonarStatus } from '@/components/dashboard/sonarStatus';
 import { ProductTestResultsStatus } from '@/components/dashboard/productTestResultsStatus';
 import { JiraStatus } from '@/components/dashboard/jiraStatus';
 import { JiraPriorityStatus } from '@/components/dashboard/JiraPriorityStatus';
-import { calculateAverageTestCoverage, summariseLatestE2E } from '@/lib/utils';
+import {
+  calculateAverageLineCoverage,
+  calculateAverageUnitPassRate,
+  summariseLatestE2E,
+} from '@/lib/utils';
 
 export function DashboardPage() {
   const {
@@ -158,11 +162,11 @@ export function DashboardPage() {
             iconColor="text-blue-500"
           />
           <OverviewCard
-            title="Test Coverage"
-            value={Math.round(
-              calculateAverageTestCoverage(allUnitResults.data || []),
-            )}
-            description={`Average latest unit test coverage across ${new Set((allUnitResults.data || []).map(r => r.product?.id ?? r.id)).size} products`}
+            title="Unit Test Pass Rate"
+            value={`${Math.round(
+              calculateAverageUnitPassRate(allUnitResults.data || []),
+            )}%`}
+            description={`Average latest unit test pass rate across ${new Set((allUnitResults.data || []).map(r => r.product?.id ?? r.id)).size} products`}
             icon={<HIcons.ChartBarIcon className="h-8 w-8" />}
             borderColor="border-l-green-500"
             iconColor="text-green-500"
@@ -176,9 +180,11 @@ export function DashboardPage() {
             iconColor="text-red-500"
           />
           <OverviewCard
-            title="Products"
-            value={products?.length ?? 0}
-            description="Products being tracked"
+            title="Code Coverage"
+            value={`${Math.round(
+              calculateAverageLineCoverage(allUnitResults.data || []),
+            )}%`}
+            description="Average latest line coverage across products"
             icon={<Activity className="h-8 w-8" />}
             borderColor="border-l-yellow-500"
             iconColor="text-yellow-500"

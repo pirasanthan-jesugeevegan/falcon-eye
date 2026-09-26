@@ -1,10 +1,14 @@
 import type { E2ETestResult, UnitCoverageRow } from '../types';
 
 /**
- * Average of each product's most recent unit coverage. `/unit-results` returns
- * one row per commit, so pick the latest row per product before averaging.
+ * Average of one figure over each product's most recent unit result.
+ * `/unit-results` returns one row per commit, so pick the latest row per
+ * product before averaging.
  */
-export function calculateAverageTestCoverage(rows: UnitCoverageRow[]) {
+function averageLatestPerProduct(
+  rows: UnitCoverageRow[],
+  pick: (row: UnitCoverageRow) => string,
+) {
   if (!rows || rows.length === 0) return 0;
 
   const latestByProduct = new Map<string, UnitCoverageRow>();
@@ -19,14 +23,24 @@ export function calculateAverageTestCoverage(rows: UnitCoverageRow[]) {
   let total = 0;
   let count = 0;
   for (const row of latestByProduct.values()) {
-    const coverage = parseFloat(row.percentage);
-    if (!isNaN(coverage)) {
-      total += coverage;
+    const value = parseFloat(pick(row));
+    if (!isNaN(value)) {
+      total += value;
       count++;
     }
   }
 
   return count > 0 ? total / count : 0;
+}
+
+/** Average unit test pass rate (`percentage`) across products' latest results. */
+export function calculateAverageUnitPassRate(rows: UnitCoverageRow[]) {
+  return averageLatestPerProduct(rows, row => row.percentage);
+}
+
+/** Average line coverage across products' latest results. */
+export function calculateAverageLineCoverage(rows: UnitCoverageRow[]) {
+  return averageLatestPerProduct(rows, row => row.lineCoverage);
 }
 
 /**

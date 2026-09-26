@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  calculateAverageTestCoverage,
+  calculateAverageLineCoverage,
+  calculateAverageUnitPassRate,
   summariseLatestE2E,
 } from './calculations';
 import type { E2ETestResult, UnitCoverageRow } from '../types';
@@ -9,10 +10,12 @@ const unit = (
   productId: string,
   date: string,
   percentage: string,
+  lineCoverage = '0',
 ): UnitCoverageRow => ({
   id: `${productId}-${date}`,
   date,
   percentage,
+  lineCoverage,
   product: { id: productId, productName: productId },
 });
 
@@ -34,9 +37,9 @@ const e2e = (
   product: { id: productId, productName: productId },
 });
 
-describe('calculateAverageTestCoverage', () => {
+describe('calculateAverageUnitPassRate', () => {
   it('returns 0 for no rows', () => {
-    expect(calculateAverageTestCoverage([])).toBe(0);
+    expect(calculateAverageUnitPassRate([])).toBe(0);
   });
 
   it("averages each product's latest row, not every commit", () => {
@@ -45,7 +48,30 @@ describe('calculateAverageTestCoverage', () => {
       unit('p1', '2026-02-01', '80'),
       unit('p2', '2026-01-15', '60'),
     ];
-    expect(calculateAverageTestCoverage(rows)).toBe(70);
+    expect(calculateAverageUnitPassRate(rows)).toBe(70);
+  });
+});
+
+describe('calculateAverageLineCoverage', () => {
+  it('returns 0 for no rows', () => {
+    expect(calculateAverageLineCoverage([])).toBe(0);
+  });
+
+  it("averages each product's latest line coverage, not its pass rate", () => {
+    const rows = [
+      unit('p1', '2026-01-01', '100', '50'),
+      unit('p1', '2026-02-01', '100', '80'),
+      unit('p2', '2026-01-15', '100', '60'),
+    ];
+    expect(calculateAverageLineCoverage(rows)).toBe(70);
+  });
+
+  it('skips rows without a numeric line coverage', () => {
+    const rows = [
+      unit('p1', '2026-01-01', '100', '80'),
+      unit('p2', '2026-01-01', '100', ''),
+    ];
+    expect(calculateAverageLineCoverage(rows)).toBe(80);
   });
 });
 

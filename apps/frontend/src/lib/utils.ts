@@ -5,7 +5,8 @@ import { twMerge } from 'tailwind-merge';
 export {
   dateFormat,
   getRatingInfo,
-  calculateAverageTestCoverage,
+  calculateAverageUnitPassRate,
+  calculateAverageLineCoverage,
   summariseLatestE2E,
 } from '@falcon-eye/common';
 

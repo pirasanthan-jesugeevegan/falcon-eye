@@ -16,11 +16,15 @@ export interface UnitTestResult {
   result: CommitTestResult[];
 }
 
-/** One row from `GET /unit-results`: a single commit's coverage, with its product. */
+/**
+ * One row from `GET /unit-results`: a single commit's result, with its product.
+ * `percentage` is the unit test pass rate; code coverage is `lineCoverage` etc.
+ */
 export interface UnitCoverageRow {
   id: string;
   date: string;
   percentage: string;
+  lineCoverage: string;
   product?: { id: string; productName: string };
 }
 

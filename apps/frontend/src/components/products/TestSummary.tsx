@@ -8,10 +8,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 
 export default function TestSummary({
-  unitTestCoverage,
+  unitPassRate,
   e2eSuccessRate,
 }: {
-  unitTestCoverage: number;
+  unitPassRate: number;
   e2eSuccessRate: number;
 }) {
   return (
@@ -23,16 +23,16 @@ export default function TestSummary({
       <CardContent>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Unit Test Coverage</span>
+            <span className="text-sm font-medium">Unit Test Pass Rate</span>
             <div className="flex items-center space-x-2">
               <div className="w-16 bg-gray-200 rounded-full h-2">
                 <div
                   className="bg-blue-600 h-2 rounded-full"
-                  style={{ width: `${unitTestCoverage}%` }}
+                  style={{ width: `${unitPassRate}%` }}
                 ></div>
               </div>
               <span className="text-sm font-medium">
-                {unitTestCoverage.toFixed(1)}%
+                {unitPassRate.toFixed(1)}%
               </span>
             </div>
           </div>
@@ -55,16 +55,16 @@ export default function TestSummary({
               <span className="text-sm font-medium">Overall Health</span>
               <Badge
                 variant={
-                  unitTestCoverage >= 80 && e2eSuccessRate >= 80
+                  unitPassRate >= 80 && e2eSuccessRate >= 80
                     ? 'default'
-                    : unitTestCoverage >= 60 && e2eSuccessRate >= 60
+                    : unitPassRate >= 60 && e2eSuccessRate >= 60
                       ? 'secondary'
                       : 'destructive'
                 }
               >
-                {unitTestCoverage >= 80 && e2eSuccessRate >= 80
+                {unitPassRate >= 80 && e2eSuccessRate >= 80
                   ? 'Healthy'
-                  : unitTestCoverage >= 60 && e2eSuccessRate >= 60
+                  : unitPassRate >= 60 && e2eSuccessRate >= 60
                     ? 'Warning'
                     : 'Critical'}
               </Badge>
