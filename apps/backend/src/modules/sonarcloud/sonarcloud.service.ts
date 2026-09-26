@@ -195,8 +195,9 @@ export class SonarCloudService {
 
       // Decrypt the API token for use
       const apiToken = decrypt(sonarCloudConfig.encryptedApiToken);
+      const metrics = updateSonarCloudQueryDto.metric ?? sonarCloudQuery.metric;
 
-      if (updateSonarCloudQueryDto.metric.includes('pull_request')) {
+      if (metrics.includes('pull_request')) {
         await this.getSonarCloudMetric(
           sonarCloudConfig.baseUrl,
           apiToken,
@@ -205,7 +206,7 @@ export class SonarCloudService {
         );
       }
 
-      if (updateSonarCloudQueryDto.metric.includes('project_status')) {
+      if (metrics.includes('project_status')) {
         await this.getSonarCloudMetric(
           sonarCloudConfig.baseUrl,
           apiToken,
