@@ -15,7 +15,8 @@ export const queryClient = new QueryClient({
       gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
     },
     mutations: {
-      retry: 1,
+      // Never auto-retry writes: a retried POST can create or trigger twice.
+      retry: false,
     },
   },
 });
