@@ -26,7 +26,9 @@ export function SonarCloudOverviewCards({
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
       <OverviewCard
         title="Quality Gate Status"
-        value={!hasProjectStatus ? 0 : projectStatus?.status ? 1 : 0}
+        value={
+          hasProjectStatus ? (projectStatus?.status ?? 'No data') : 'No data'
+        }
         icon={
           !hasProjectStatus ? (
             <HelpCircle className="text-gray-400" />

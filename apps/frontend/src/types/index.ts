@@ -28,6 +28,7 @@ export type {
   // Test Results types
   CommitTestResult,
   UnitTestResult,
+  UnitCoverageRow,
   E2ETestResult,
   // API types
   ApiResponse,
