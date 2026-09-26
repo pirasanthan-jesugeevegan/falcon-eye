@@ -64,6 +64,20 @@ describe('SonarCloudService', () => {
     });
   });
 
+  describe('executeQuery', () => {
+    it('reports a SonarCloud failure without mentioning JQL', async () => {
+      mockedAxios.get.mockRejectedValue(
+        new Error('Request failed with status code 401'),
+      );
+
+      const error = await service.executeQuery('q1').catch((e) => e);
+
+      expect(error.message).toContain('SonarCloud');
+      expect(error.message).toContain('401');
+      expect(error.message).not.toMatch(/JQL/);
+    });
+  });
+
   describe('CreateSonarCloudQueryDto', () => {
     it('rejects a query with no metric', async () => {
       const dto = plainToInstance(CreateSonarCloudQueryDto, {
