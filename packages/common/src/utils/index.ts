@@ -8,4 +8,7 @@ export { dateFormat } from './date';
 export { getRatingInfo } from './rating';
 
 // Calculation utilities
-export { calculateAverageTestCoverage } from './calculations';
+export {
+  calculateAverageTestCoverage,
+  summariseLatestE2E,
+} from './calculations';

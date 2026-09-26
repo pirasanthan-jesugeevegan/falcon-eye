@@ -36,4 +36,5 @@ export interface E2ETestResult {
   reportUrl: string;
   tag: string;
   environment: string;
+  product?: { id: string; productName: string };
 }
