@@ -102,7 +102,7 @@ export default function UnitTestResults({
     },
     {
       accessorKey: 'percentage',
-      header: 'Overall Coverage',
+      header: 'Test Pass Rate',
       cell: ({ row }) => {
         return (
           <div className="flex items-center space-x-2 w-40">
@@ -119,11 +119,11 @@ export default function UnitTestResults({
   return (
     <>
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mb-6">
-        {/* Overall Coverage Card */}
+        {/* Test Pass Rate Card */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-              Overall Coverage
+              Test Pass Rate
             </CardTitle>
           </CardHeader>
           <CardContent>

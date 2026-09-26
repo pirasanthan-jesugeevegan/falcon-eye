@@ -48,7 +48,8 @@ export {
   // Rating utilities
   getRatingInfo,
   // Calculation utilities
-  calculateAverageTestCoverage,
+  calculateAverageUnitPassRate,
+  calculateAverageLineCoverage,
   summariseLatestE2E,
   // Query utilities
   runActiveQueries,
