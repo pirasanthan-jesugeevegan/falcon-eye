@@ -83,16 +83,16 @@ deployed frontend base URL must include that prefix.
 
 Backend variables live in the root `.env`; see `.env.example`.
 
-| Variable                                                      | Purpose                                                               |
-| ------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `NODE_ENV`                                                    | Runtime environment                                                   |
-| `PORT`                                                        | Local API port                                                        |
-| `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME` | PostgreSQL connection                                                 |
-| `DB_SSL`                                                      | Enable PostgreSQL TLS                                                 |
-| `DB_SYNCHRONIZE`                                              | Optional TypeORM schema sync; keep false outside disposable databases |
-| `ENCRYPTION_KEY`                                              | Base64-encoded 32-byte key for stored integration credentials         |
-| `ALLOWED_ORIGINS`                                             | Comma-separated browser origins accepted by the API                   |
-| `LOG_LEVEL`                                                   | Backend log level                                                     |
+| Variable                                                      | Purpose                                                                           |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `NODE_ENV`                                                    | Runtime environment                                                               |
+| `PORT`                                                        | Local API port                                                                    |
+| `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME` | PostgreSQL connection                                                             |
+| `DB_SSL`                                                      | Enable PostgreSQL TLS                                                             |
+| `DB_SYNCHRONIZE`                                              | Optional TypeORM schema sync; keep false outside disposable databases             |
+| `ENCRYPTION_KEY`                                              | Base64-encoded 32-byte key for stored integration credentials                     |
+| `ALLOWED_ORIGINS`                                             | Comma-separated browser origins accepted by the API; `*` is refused in production |
+| `LOG_LEVEL`                                                   | Backend log level                                                                 |
 
 Frontend variables live in `apps/frontend/.env.local`; see
 `apps/frontend/.env.example`.
@@ -108,6 +108,8 @@ pnpm dev                 # frontend and backend
 pnpm build               # all workspace packages
 pnpm lint                # lint the monorepo
 pnpm backend:test        # backend unit tests
+pnpm backend:test:e2e    # backend HTTP tests (no database needed)
+pnpm common:test         # shared package tests
 pnpm backend:migration:run
 pnpm backend:migration:generate src/database/migrations/Name
 pnpm backend:migration:revert
@@ -166,8 +168,15 @@ need `SST_APP_NAME=pj-falcon-eye-stack` until they are rebuilt.
 - Never commit `.env`, `.env.local`, API tokens, or generated encryption keys.
 - Rotate credentials immediately if they appear in git history or logs.
 - The API currently has no authentication layer. Do not expose it publicly
-  without adding authentication and authorization.
-- Restrict `ALLOWED_ORIGINS` to trusted frontend origins.
+  without adding authentication and authorization; production logs a warning
+  at startup to say so.
+- Restrict `ALLOWED_ORIGINS` to trusted frontend origins. Production refuses to
+  start with it empty or set to `*`.
+- Stored Jira, SonarCloud and GitHub credentials are encrypted and never
+  returned by the API.
+- Requests are validated strictly (unknown fields are rejected), security
+  headers are set with helmet, and each client is rate limited (in memory, so
+  best-effort per Lambda instance).
 
 ## Project structure
 

@@ -7,6 +7,7 @@ import type {
   JiraIssue,
   JiraQuery,
 } from '@/types';
+import { runActiveQueries } from '@falcon-eye/common';
 import { toast } from 'sonner';
 
 // API functions
@@ -41,7 +42,9 @@ export const jiraApi = {
     apiClient.delete(`/jira/query/${id}`),
 
   // Update the getExecuteQuery function to return properly typed issues
-  getExecuteQuery: (id: string): Promise<{ issues: JiraIssue[] }> =>
+  getExecuteQuery: (
+    id: string,
+  ): Promise<{ issues: JiraIssue[]; truncated?: boolean }> =>
     apiClient.get(`/jira/query/${id}/execute`),
 };
 
@@ -234,17 +237,19 @@ export const useAllJiraIssues = () => {
     queryFn: async (): Promise<JiraAllIssuesResponse> => {
       const queries = await jiraApi.getQueries();
 
-      const results = await Promise.all(
-        queries.map(async query => {
+      const { results, failed } = await runActiveQueries(
+        queries,
+        async query => {
           const result = await jiraApi.getExecuteQuery(query.id!);
-          return {
-            issues: result.issues,
-            queryName: query.name,
-          };
-        }),
+          return { issues: result.issues, queryName: query.name };
+        },
       );
 
-      return { results, queries } as unknown as JiraAllIssuesResponse;
+      return {
+        results: results.map(r => r.value),
+        queries: results.map(r => r.query),
+        failedQueries: failed,
+      } as unknown as JiraAllIssuesResponse;
     },
     staleTime: 5 * 60 * 1000,
   });

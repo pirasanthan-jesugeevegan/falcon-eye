@@ -108,7 +108,7 @@ export class SonarCloudService {
   async createSonarCloudQuery(
     createSonarCloudQueryDto: CreateSonarCloudQueryDto,
   ): Promise<SonarCloudQuery> {
-    // Check if Jira config exists
+    // Check if the SonarCloud config exists
     const sonarCloudConfig = await this.findSonarCloudConfigById(
       createSonarCloudQueryDto.sonarCloudConfigId,
     );
@@ -117,7 +117,7 @@ export class SonarCloudService {
     const apiToken = decrypt(sonarCloudConfig.encryptedApiToken);
 
     if (createSonarCloudQueryDto.metric.includes('pull_request')) {
-      // Verify if the JQL query is valid
+      // Verify the SonarCloud project can be queried
 
       await this.getSonarCloudMetric(
         sonarCloudConfig.baseUrl,
@@ -128,7 +128,7 @@ export class SonarCloudService {
     }
 
     if (createSonarCloudQueryDto.metric.includes('project_status')) {
-      // Verify if the JQL query is valid
+      // Verify the SonarCloud project can be queried
       await this.getSonarCloudMetric(
         sonarCloudConfig.baseUrl,
         apiToken,
@@ -175,7 +175,7 @@ export class SonarCloudService {
   ): Promise<SonarCloudQuery> {
     const sonarCloudQuery = await this.findSonarCloudQueryById(id);
 
-    // If JQL query or Jira config is being updated, verify the query
+    // If the project or config is being updated, verify the query
     if (
       updateSonarCloudQueryDto.project ||
       updateSonarCloudQueryDto.sonarCloudConfigId
@@ -190,8 +190,9 @@ export class SonarCloudService {
 
       // Decrypt the API token for use
       const apiToken = decrypt(sonarCloudConfig.encryptedApiToken);
+      const metrics = updateSonarCloudQueryDto.metric ?? sonarCloudQuery.metric;
 
-      if (updateSonarCloudQueryDto.metric.includes('pull_request')) {
+      if (metrics.includes('pull_request')) {
         await this.getSonarCloudMetric(
           sonarCloudConfig.baseUrl,
           apiToken,
@@ -200,7 +201,7 @@ export class SonarCloudService {
         );
       }
 
-      if (updateSonarCloudQueryDto.metric.includes('project_status')) {
+      if (metrics.includes('project_status')) {
         await this.getSonarCloudMetric(
           sonarCloudConfig.baseUrl,
           apiToken,
@@ -296,10 +297,10 @@ export class SonarCloudService {
       if (response.status === 200) {
         return response.data;
       }
-      throw new BadRequestException('Invalid JQL query');
+      throw new BadRequestException('Invalid SonarCloud response');
     } catch (error) {
       throw new BadRequestException(
-        `Failed to verify JQL query: ${error.message}`,
+        `Failed to fetch data from SonarCloud: ${error.message}`,
       );
     }
   }

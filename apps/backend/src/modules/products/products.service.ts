@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
@@ -45,7 +49,7 @@ export class ProductsService {
       where: { productName: createProductDto.productName },
     });
     if (existingProduct) {
-      throw new NotFoundException(
+      throw new ConflictException(
         `Product with name '${createProductDto.productName}' already exists`,
       );
     }

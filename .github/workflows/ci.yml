@@ -120,8 +120,17 @@ jobs:
             .pnpm-store
           key: ${{ needs.setup.outputs.cache-key }}
 
-      - name: Run tests
+      - name: Build shared package
+        run: pnpm run common:build
+
+      - name: Run common tests
+        run: pnpm run common:test
+
+      - name: Run backend unit tests
         run: pnpm run backend:test
+
+      - name: Run backend e2e tests
+        run: pnpm run backend:test:e2e
 
   build:
     needs: [install, setup]

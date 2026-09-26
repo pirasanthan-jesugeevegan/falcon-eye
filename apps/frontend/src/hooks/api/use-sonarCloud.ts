@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query-keys';
 import { apiClient, handleApiError } from '@/lib/api-client';
 import type { SonarCloudConfig } from '@/types';
+import { runActiveQueries } from '@falcon-eye/common';
 import { toast } from 'sonner';
 
 // Define the SonarCloudQuery type that was missing
@@ -259,8 +260,9 @@ export const useAllSonarCloudIssues = () => {
     queryFn: async () => {
       const queries = await sonarCloudApi.getQueries();
 
-      const results = await Promise.all(
-        queries.map(async query => {
+      const { results, failed } = await runActiveQueries(
+        queries,
+        async query => {
           const result = await sonarCloudApi.getExecuteQuery(query.id!);
           return {
             queryName: query.name,
@@ -268,10 +270,14 @@ export const useAllSonarCloudIssues = () => {
             pull_request: result.pull_request,
             project_status: result.project_status,
           };
-        }),
+        },
       );
 
-      return { results: results.flat(), queries: queries };
+      return {
+        results: results.map(r => r.value),
+        queries: results.map(r => r.query),
+        failedQueries: failed,
+      };
     },
     staleTime: 5 * 60 * 1000,
   });

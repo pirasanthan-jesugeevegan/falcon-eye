@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsString, IsNumber, IsDate } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsNumber,
+  IsDate,
+  IsUrl,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateE2EResultDto {
@@ -13,18 +20,21 @@ export class CreateE2EResultDto {
 
   @IsNotEmpty()
   @IsNumber()
+  @Min(0)
   pass: number;
 
   @IsNotEmpty()
   @IsNumber()
+  @Min(0)
   fail: number;
 
   @IsNotEmpty()
   @IsNumber()
+  @Min(0)
   skip: number;
 
   @IsNotEmpty()
-  @IsString()
+  @IsUrl({ require_tld: false })
   reportUrl: string;
 
   @IsNotEmpty()

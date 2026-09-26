@@ -70,7 +70,7 @@ describe('Products API (e2e)', () => {
       expect(mockRepository.save).toHaveBeenCalledWith(mockProduct);
     });
 
-    it('should return 404 when creating product with duplicate name', async () => {
+    it('should return 409 when creating product with duplicate name', async () => {
       const createProductDto = {
         productName: 'Duplicate Product',
         icon: 'https://test.com/icon.png',
@@ -90,7 +90,7 @@ describe('Products API (e2e)', () => {
       await request(app.getHttpServer())
         .post('/products')
         .send(createProductDto)
-        .expect(404);
+        .expect(409);
 
       expect(mockRepository.findOne).toHaveBeenCalledWith({
         where: { productName: createProductDto.productName },
@@ -146,6 +146,14 @@ describe('Products API (e2e)', () => {
   });
 
   describe('/products/:id (GET)', () => {
+    it('should return 400 for an id that is not a UUID', async () => {
+      await request(app.getHttpServer())
+        .get('/products/not-a-uuid')
+        .expect(400);
+
+      expect(mockRepository.findOne).not.toHaveBeenCalled();
+    });
+
     it('should return a single product by id', async () => {
       const productId = '123e4567-e89b-12d3-a456-426614174000';
       const mockProduct = {

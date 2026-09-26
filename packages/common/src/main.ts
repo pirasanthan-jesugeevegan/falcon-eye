@@ -49,6 +49,9 @@ export {
   getRatingInfo,
   // Calculation utilities
   calculateAverageTestCoverage,
+  summariseLatestE2E,
+  // Query utilities
+  runActiveQueries,
 } from './utils';
 
 // ============================================================================

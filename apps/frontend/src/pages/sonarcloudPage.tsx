@@ -21,13 +21,24 @@ export function SonarcloudPage() {
   const { sonarCloudId } = useParams({
     from: '/sonarCloud/$sonarCloudId',
   });
-  const { data, isLoading } = useExecuteSonarCloudQuery(sonarCloudId);
+  const { data, isLoading, error } = useExecuteSonarCloudQuery(sonarCloudId);
 
   // Handling loading states
   if (isLoading) {
     return (
       <div className="container mx-auto py-6 flex items-center justify-center min-h-[200px]">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Handling errors
+  if (error || !data) {
+    return (
+      <div className="container mx-auto py-6">
+        <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-md">
+          <p>{error ? error.message : 'SonarCloud query not found'}</p>
+        </div>
       </div>
     );
   }

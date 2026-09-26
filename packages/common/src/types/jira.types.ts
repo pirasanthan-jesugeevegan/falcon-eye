@@ -1,3 +1,5 @@
+import type { FailedQuery } from '../utils/queries';
+
 export interface JiraConfig {
   id?: string;
   instanceName: string;
@@ -90,6 +92,8 @@ export interface JiraQueryResult {
 export interface JiraAllIssuesResponse {
   results: JiraQueryResult[];
   queries: JiraQuery[];
+  /** Active queries whose request failed; the rest still load. */
+  failedQueries: FailedQuery[];
 }
 
 export interface JiraResult {

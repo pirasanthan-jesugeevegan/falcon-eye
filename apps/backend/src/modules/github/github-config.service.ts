@@ -21,9 +21,11 @@ export class GithubConfigService {
 
   async createConfig(dto: CreateGithubConfigDto) {
     try {
-      // Check for duplicate workflow and branch combination
+      // Check for duplicate repo, workflow and branch combination
       const existingConfig = await this.configRepo.findOne({
         where: {
+          owner: dto.owner,
+          repo: dto.repo,
           workflow: dto.workflow,
           defaultRef: dto.defaultRef || 'main',
           isActive: true,
@@ -146,8 +148,8 @@ export class GithubConfigService {
         throw new NotFoundException('GitHub config not found');
       }
 
-      // Use the ref from DTO or default to 'main'
-      const ref = dto.ref || 'main';
+      // Use the ref from the request, else the config's default branch
+      const ref = dto.ref || config.defaultRef;
 
       // Convert inputs to string format for GitHub API
       const githubInputs: Record<string, string> = {};

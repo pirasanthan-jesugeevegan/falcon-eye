@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductsModule } from './modules/products/products.module';
 import { E2EResultsModule } from './modules/e2e-results/e2e-results.module';
+import { SecurityModule } from './security/security.module';
+import { HealthModule } from './health/health.module';
 import { UnitResultsModule } from './modules/unit-results/unit-results.module';
 import { JiraModule } from './modules/jira/jira.module';
 import { join } from 'path';
@@ -21,6 +23,8 @@ import { Infrastructure } from './modules/infrastructure/entities/infrastructure
 
 @Module({
   imports: [
+    SecurityModule.register(),
+    HealthModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: [

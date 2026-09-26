@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -21,6 +22,7 @@ export class GithubConfig {
   workflow: string;
 
   @Column('text')
+  @Exclude()
   encryptedPat: string;
 
   @Column({ type: 'jsonb' })
