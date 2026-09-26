@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsString, IsNumber, IsDate } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsNumber,
+  IsDate,
+  Max,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateUnitResultDto {
@@ -13,6 +20,8 @@ export class CreateUnitResultDto {
 
   @IsNotEmpty()
   @IsNumber()
+  @Min(0)
+  @Max(100)
   percentage: number;
 
   @IsNotEmpty()
@@ -25,18 +34,26 @@ export class CreateUnitResultDto {
 
   @IsNotEmpty()
   @IsNumber()
+  @Min(0)
+  @Max(100)
   statementCoverage: number;
 
   @IsNotEmpty()
   @IsNumber()
+  @Min(0)
+  @Max(100)
   functionCoverage: number;
 
   @IsNotEmpty()
   @IsNumber()
+  @Min(0)
+  @Max(100)
   branchCoverage: number;
 
   @IsNotEmpty()
   @IsNumber()
+  @Min(0)
+  @Max(100)
   lineCoverage: number;
 
   @IsNotEmpty()
