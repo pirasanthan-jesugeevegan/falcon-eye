@@ -26,7 +26,6 @@ export class CreateSonarCloudQueryDto {
   @IsString()
   description: string;
 
-  @IsOptional()
   @IsArray()
   @ArrayNotEmpty()
   @ArrayUnique()
