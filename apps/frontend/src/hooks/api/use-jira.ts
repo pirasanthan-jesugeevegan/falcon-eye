@@ -41,7 +41,9 @@ export const jiraApi = {
     apiClient.delete(`/jira/query/${id}`),
 
   // Update the getExecuteQuery function to return properly typed issues
-  getExecuteQuery: (id: string): Promise<{ issues: JiraIssue[] }> =>
+  getExecuteQuery: (
+    id: string,
+  ): Promise<{ issues: JiraIssue[]; truncated?: boolean }> =>
     apiClient.get(`/jira/query/${id}/execute`),
 };
 

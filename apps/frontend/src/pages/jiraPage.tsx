@@ -384,6 +384,13 @@ export function JiraPage() {
         icon="jira"
       />
 
+      {data.truncated && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-md text-sm">
+          Showing the first {data.issues.length} issues. Narrow the JQL query to
+          see the rest.
+        </div>
+      )}
+
       <Card className="w-full">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium">
