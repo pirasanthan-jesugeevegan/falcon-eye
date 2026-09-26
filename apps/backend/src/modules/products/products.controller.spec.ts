@@ -6,7 +6,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 
 describe('ProductsController', () => {
   let controller: ProductsController;
@@ -72,7 +72,7 @@ describe('ProductsController', () => {
       expect(mockRepository.save).toHaveBeenCalledWith(expectedProduct);
     });
 
-    it('should throw NotFoundException when product already exists', async () => {
+    it('should throw ConflictException when product already exists', async () => {
       const createProductDto: CreateProductDto = {
         productName: 'Existing Product',
         icon: 'https://test.com',
@@ -90,7 +90,7 @@ describe('ProductsController', () => {
       (mockRepository.findOne as jest.Mock).mockResolvedValue(existingProduct);
 
       await expect(controller.create(createProductDto)).rejects.toThrow(
-        NotFoundException,
+        ConflictException,
       );
       expect(mockRepository.findOne).toHaveBeenCalledWith({
         where: { productName: createProductDto.productName },
