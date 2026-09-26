@@ -12,6 +12,8 @@
     "backend:seed": "pnpm --filter @falcon-eye/backend run seed",
     "backend:start": "pnpm --filter @falcon-eye/backend run start:dev",
     "backend:test": "pnpm --filter @falcon-eye/backend run test",
+    "backend:test:e2e": "pnpm --filter @falcon-eye/backend run test:e2e",
+    "common:test": "pnpm --filter @falcon-eye/common run test",
     "common:build": "pnpm --filter @falcon-eye/common run build",
     "build": "pnpm run common:build && pnpm run backend:build && pnpm run frontend:build",
     "common": "pnpm --filter common",
