@@ -16,6 +16,14 @@ export interface UnitTestResult {
   result: CommitTestResult[];
 }
 
+/** One row from `GET /unit-results`: a single commit's coverage, with its product. */
+export interface UnitCoverageRow {
+  id: string;
+  date: string;
+  percentage: string;
+  product?: { id: string; productName: string };
+}
+
 export interface E2ETestResult {
   id: string;
   name?: string;

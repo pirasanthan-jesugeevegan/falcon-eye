@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query-keys';
 import { apiClient } from '@/lib/api-client';
-import type { UnitTestResult, E2ETestResult } from '@/types';
+import type { UnitTestResult, UnitCoverageRow, E2ETestResult } from '@/types';
 
 // API functions
 const testResultsApi = {
@@ -12,7 +12,7 @@ const testResultsApi = {
     apiClient.get(`/e2e-results?productName=${productName}`),
 
   // New function to get all test results
-  getAllUnitResults: (): Promise<UnitTestResult[]> =>
+  getAllUnitResults: (): Promise<UnitCoverageRow[]> =>
     apiClient.get('/unit-results'),
 
   getAllE2EResults: (): Promise<E2ETestResult[]> =>

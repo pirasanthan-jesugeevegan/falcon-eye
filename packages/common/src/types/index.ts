@@ -36,6 +36,7 @@ export type {
 export type {
   CommitTestResult,
   UnitTestResult,
+  UnitCoverageRow,
   E2ETestResult,
 } from './test-results.types';
 
