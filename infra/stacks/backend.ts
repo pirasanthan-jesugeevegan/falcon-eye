@@ -12,8 +12,9 @@ export function createBackendStack(router: sst.aws.Router) {
     runtime: 'nodejs20.x',
     timeout: '30 seconds',
     memory: '512 MB',
-    // A traffic spike (or abuse) can't run up the bill: at most 5 concurrent runs.
-    concurrency: { reserved: 5 },
+    // A traffic spike (or abuse) can't run up the bill: at most 20 concurrent runs.
+    // The dashboard fires about 40 requests at once; 5 rejected most of them with 429.
+    concurrency: { reserved: 20 },
     environment: {
       NODE_ENV: 'production',
       DEMO_MODE: 'true',

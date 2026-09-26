@@ -142,7 +142,7 @@ export function DashboardPage() {
             value={Math.round(
               calculateAverageTestCoverage(allUnitResults.data || []),
             )}
-            description={`Average unit test coverage across ${allUnitResults.data?.length || 0} products`}
+            description={`Average latest unit test coverage across ${new Set((allUnitResults.data || []).map(r => r.product?.id ?? r.id)).size} products`}
             icon={<HIcons.ChartBarIcon className="h-8 w-8" />}
             borderColor="border-l-green-500"
             iconColor="text-green-500"
