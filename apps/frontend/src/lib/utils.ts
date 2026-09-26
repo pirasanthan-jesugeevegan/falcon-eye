@@ -6,6 +6,7 @@ export {
   dateFormat,
   getRatingInfo,
   calculateAverageTestCoverage,
+  summariseLatestE2E,
 } from '@falcon-eye/common';
 
 // UI-specific utility (stays in frontend)

@@ -1,4 +1,4 @@
-import type { UnitCoverageRow } from '../types';
+import type { E2ETestResult, UnitCoverageRow } from '../types';
 
 /**
  * Average of each product's most recent unit coverage. `/unit-results` returns
@@ -27,4 +27,25 @@ export function calculateAverageTestCoverage(rows: UnitCoverageRow[]) {
   }
 
   return count > 0 ? total / count : 0;
+}
+
+/**
+ * Judge each product by its most recent E2E run: how many products are
+ * currently failing, out of how many have reported any run.
+ */
+export function summariseLatestE2E(rows: E2ETestResult[]) {
+  const latestByProduct = new Map<string, E2ETestResult>();
+  for (const row of rows ?? []) {
+    const key = row.product?.id ?? row.id;
+    const current = latestByProduct.get(key);
+    if (!current || new Date(row.timestamp) > new Date(current.timestamp)) {
+      latestByProduct.set(key, row);
+    }
+  }
+
+  let failing = 0;
+  for (const row of latestByProduct.values()) {
+    if (row.status === 'failed') failing++;
+  }
+  return { failing, total: latestByProduct.size };
 }

@@ -12,7 +12,7 @@ import { SonarStatus } from '@/components/dashboard/sonarStatus';
 import { ProductTestResultsStatus } from '@/components/dashboard/productTestResultsStatus';
 import { JiraStatus } from '@/components/dashboard/jiraStatus';
 import { JiraPriorityStatus } from '@/components/dashboard/JiraPriorityStatus';
-import { calculateAverageTestCoverage } from '@/lib/utils';
+import { calculateAverageTestCoverage, summariseLatestE2E } from '@/lib/utils';
 
 export function DashboardPage() {
   const {
@@ -68,18 +68,9 @@ export function DashboardPage() {
       0,
     ) ?? 0;
 
-  // Calculate real failed E2E tests from E2E test results
-  const failedE2ETests = (() => {
-    if (!allE2EResults.data || allE2EResults.data.length === 0) return 0;
-
-    return allE2EResults.data.filter(e2eResult => e2eResult.status === 'failed')
-      .length;
-  })();
-
-  // Calculate total E2E tests for percentage
-  const totalE2ETests = allE2EResults.data?.length ?? 0;
-  const failedE2EPercentage =
-    totalE2ETests > 0 ? (failedE2ETests / totalE2ETests) * 100 : 0;
+  // Products whose most recent E2E run failed, out of products with any E2E run
+  const { failing: failedE2EProducts, total: e2eProductCount } =
+    summariseLatestE2E(allE2EResults.data ?? []);
 
   // Handling loading states
   if (
@@ -148,21 +139,17 @@ export function DashboardPage() {
             iconColor="text-green-500"
           />
           <OverviewCard
-            title="Failed E2E Tests"
-            value={failedE2ETests}
-            description={`${failedE2EPercentage.toFixed(0)}% of ${totalE2ETests} total E2E tests`}
-            change={{
-              value: Number(failedE2EPercentage.toFixed(0)),
-              type: failedE2EPercentage > 10 ? 'increase' : 'decrease',
-            }}
+            title="Failing E2E Products"
+            value={failedE2EProducts}
+            description={`Latest E2E run failed, of ${e2eProductCount} products with E2E results`}
             icon={<XCircle className="h-8 w-8" />}
             borderColor="border-l-red-500"
             iconColor="text-red-500"
           />
           <OverviewCard
-            title="Recent Activity"
+            title="Products"
             value={products?.length ?? 0}
-            description="Products with recent updates"
+            description="Products being tracked"
             icon={<Activity className="h-8 w-8" />}
             borderColor="border-l-yellow-500"
             iconColor="text-yellow-500"
