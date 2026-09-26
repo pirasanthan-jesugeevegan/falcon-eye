@@ -9,7 +9,8 @@ export { getRatingInfo } from './rating';
 
 // Calculation utilities
 export {
-  calculateAverageTestCoverage,
+  calculateAverageUnitPassRate,
+  calculateAverageLineCoverage,
   summariseLatestE2E,
 } from './calculations';
 

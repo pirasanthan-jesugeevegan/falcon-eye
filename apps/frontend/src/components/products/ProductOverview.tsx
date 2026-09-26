@@ -31,8 +31,8 @@ export default function ProductOverview({
   const latestUnitTest = unitTestResults?.[0];
   const latestE2ETest = e2eTestResults?.[0];
 
-  // Calculate unit test coverage from the latest result
-  const unitTestCoverage = latestUnitTest?.result?.[0]?.percentage
+  // Unit test pass rate from the latest result
+  const unitPassRate = latestUnitTest?.result?.[0]?.percentage
     ? parseFloat(latestUnitTest.result[0].percentage)
     : 0;
 
@@ -44,10 +44,8 @@ export default function ProductOverview({
   const e2eSuccessRate =
     totalE2ETests > 0 ? Math.round((passedE2ETests / totalE2ETests) * 100) : 0;
 
-  // Calculate overall test success rate (unit coverage + E2E success rate)
-  const overallTestSuccess = Math.round(
-    (unitTestCoverage + e2eSuccessRate) / 2,
-  );
+  // Calculate overall test success rate (unit pass rate + E2E success rate)
+  const overallTestSuccess = Math.round((unitPassRate + e2eSuccessRate) / 2);
 
   return (
     <>
@@ -59,10 +57,8 @@ export default function ProductOverview({
             <TestTube className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {unitTestCoverage.toFixed(1)}%
-            </div>
-            <p className="text-xs text-muted-foreground">Latest coverage</p>
+            <div className="text-2xl font-bold">{unitPassRate.toFixed(1)}%</div>
+            <p className="text-xs text-muted-foreground">Latest pass rate</p>
             {latestUnitTest && (
               <div className="mt-2 text-xs text-muted-foreground">
                 <div className="flex items-center">
@@ -124,16 +120,16 @@ export default function ProductOverview({
             <div className="mt-2">
               <Badge
                 variant={
-                  unitTestCoverage >= 80 && e2eSuccessRate >= 80
+                  unitPassRate >= 80 && e2eSuccessRate >= 80
                     ? 'default'
-                    : unitTestCoverage >= 60 && e2eSuccessRate >= 60
+                    : unitPassRate >= 60 && e2eSuccessRate >= 60
                       ? 'secondary'
                       : 'destructive'
                 }
               >
-                {unitTestCoverage >= 80 && e2eSuccessRate >= 80
+                {unitPassRate >= 80 && e2eSuccessRate >= 80
                   ? 'Excellent'
-                  : unitTestCoverage >= 60 && e2eSuccessRate >= 60
+                  : unitPassRate >= 60 && e2eSuccessRate >= 60
                     ? 'Good'
                     : 'Needs Attention'}
               </Badge>
@@ -180,7 +176,7 @@ export default function ProductOverview({
         <ProductInfo product={product} />
         {/* Test Summary */}
         <TestSummary
-          unitTestCoverage={unitTestCoverage}
+          unitPassRate={unitPassRate}
           e2eSuccessRate={e2eSuccessRate}
         />
       </div>
